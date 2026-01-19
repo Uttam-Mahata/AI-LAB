@@ -39,6 +39,7 @@ class WaterJugProblem:
         self.goal_state = goal_state
         self.initial_state = initial_state
         self.path_count = 0
+        self.max_depth = 20  # Maximum depth for path counting to avoid infinite loops
     
     def get_successors(self, state: Tuple[int, int]) -> List[Tuple[Tuple[int, int], str]]:
         """
@@ -63,31 +64,31 @@ class WaterJugProblem:
         
         # Operation 1: Fill jug 1
         if jug1 < self.jug1_capacity:
-            successors.append(((self.jug1_capacity, jug2), f"Fill Jug1"))
+            successors.append(((self.jug1_capacity, jug2), "Fill Jug1"))
         
         # Operation 2: Fill jug 2
         if jug2 < self.jug2_capacity:
-            successors.append(((jug1, self.jug2_capacity), f"Fill Jug2"))
+            successors.append(((jug1, self.jug2_capacity), "Fill Jug2"))
         
         # Operation 3: Empty jug 1
         if jug1 > 0:
-            successors.append(((0, jug2), f"Empty Jug1"))
+            successors.append(((0, jug2), "Empty Jug1"))
         
         # Operation 4: Empty jug 2
         if jug2 > 0:
-            successors.append(((jug1, 0), f"Empty Jug2"))
+            successors.append(((jug1, 0), "Empty Jug2"))
         
         # Operation 5: Pour from jug 1 to jug 2
         if jug1 > 0 and jug2 < self.jug2_capacity:
             pour_amount = min(jug1, self.jug2_capacity - jug2)
             successors.append(((jug1 - pour_amount, jug2 + pour_amount), 
-                             f"Pour Jug1->Jug2"))
+                             "Pour Jug1->Jug2"))
         
         # Operation 6: Pour from jug 2 to jug 1
         if jug2 > 0 and jug1 < self.jug1_capacity:
             pour_amount = min(jug2, self.jug1_capacity - jug1)
             successors.append(((jug1 + pour_amount, jug2 - pour_amount), 
-                             f"Pour Jug2->Jug1"))
+                             "Pour Jug2->Jug1"))
         
         return successors
     
@@ -178,7 +179,7 @@ class WaterJugProblem:
                 continue
             
             # Avoid cycles in current path
-            if len(path) > 20:  # Limit depth to avoid infinite loops
+            if len(path) > self.max_depth:
                 continue
             
             # Explore successors

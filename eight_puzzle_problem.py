@@ -28,6 +28,8 @@ class PuzzleState:
         move: Move that led to this state
     """
     
+    BOARD_SIZE = 3  # Size of the puzzle grid (3x3)
+    
     def __init__(self, board: List[List[int]], g_cost: int = 0, 
                  parent=None, move: str = "Initial"):
         """
@@ -49,8 +51,8 @@ class PuzzleState:
     
     def _find_empty(self) -> Tuple[int, int]:
         """Find the position of the empty cell (0)."""
-        for i in range(3):
-            for j in range(3):
+        for i in range(self.BOARD_SIZE):
+            for j in range(self.BOARD_SIZE):
                 if self.board[i][j] == 0:
                     return (i, j)
         return (0, 0)
@@ -107,8 +109,8 @@ class EightPuzzleSolver:
             Dictionary mapping tile value to (row, col) position in goal state
         """
         positions = {}
-        for i in range(3):
-            for j in range(3):
+        for i in range(PuzzleState.BOARD_SIZE):
+            for j in range(PuzzleState.BOARD_SIZE):
                 tile = self.goal_state.board[i][j]
                 if tile != 0:
                     positions[tile] = (i, j)
@@ -139,7 +141,7 @@ class EightPuzzleSolver:
             new_row, new_col = row + dr, col + dc
             
             # Check if move is valid
-            if 0 <= new_row < 3 and 0 <= new_col < 3:
+            if 0 <= new_row < PuzzleState.BOARD_SIZE and 0 <= new_col < PuzzleState.BOARD_SIZE:
                 # Create new board
                 new_board = deepcopy(state.board)
                 # Swap empty cell with target cell
@@ -168,8 +170,8 @@ class EightPuzzleSolver:
             Number of tiles not in their goal position
         """
         count = 0
-        for i in range(3):
-            for j in range(3):
+        for i in range(PuzzleState.BOARD_SIZE):
+            for j in range(PuzzleState.BOARD_SIZE):
                 if state.board[i][j] != 0 and \
                    state.board[i][j] != self.goal_state.board[i][j]:
                     count += 1
@@ -189,8 +191,8 @@ class EightPuzzleSolver:
             Sum of Manhattan distances for all tiles
         """
         distance = 0
-        for i in range(3):
-            for j in range(3):
+        for i in range(PuzzleState.BOARD_SIZE):
+            for j in range(PuzzleState.BOARD_SIZE):
                 tile = state.board[i][j]
                 if tile != 0:
                     goal_row, goal_col = self.goal_positions[tile]
