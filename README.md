@@ -148,6 +148,21 @@ Step 1: Up
 
 ---
 
+## Quick Start
+
+Run the demonstration script to see both problems in action:
+
+```bash
+python3 demo.py
+```
+
+Or run individual problem solvers:
+
+```bash
+python3 water_jug_problem.py
+python3 eight_puzzle_problem.py
+```
+
 ## Requirements
 
 - Python 3.6 or higher
