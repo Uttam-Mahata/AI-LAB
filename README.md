@@ -1,47 +1,60 @@
-# AI Lab - Search Algorithms Implementation
+# AI Lab - Course Assignments
 
-This repository contains implementations of classic AI search problems using various search algorithms.
+This repository contains AI Lab course assignments, including implementations of classic AI problems and machine learning applications.
 
-## Problems Implemented
+## Repository Structure
 
-### 1. Water Jug Problem
+- **Assignment 1**: News Classification using LSTM and GRU
+- **Assignment 2**: Water Jug Problem using Search Algorithms
+- **Additional Problems**: Eight Puzzle Problem (bonus implementation)
 
-**Problem Description:**
-Given two jugs with capacities of 3 liters and 4 liters, and no markings for measurement, find a sequence of operations to measure exactly 2 liters in the 4-liter jug.
+## Assignments
 
-**Permissible Operations:**
-- Fill a jug to its full capacity
-- Empty a jug completely
-- Pour water from one jug to another until either the source is empty or the destination is full
+### Assignment 1: News Classification
 
-**Algorithms Used:**
-- **Depth First Search (DFS):** Explores paths deeply before backtracking
-- **Breadth First Search (BFS):** Explores all paths at the current depth before moving deeper
+Implementation of text classification using deep learning techniques (LSTM and GRU) on the AG News dataset.
 
-**Features:**
-- Solves the water jug problem with configurable jug capacities
-- Supports variable initial and goal states
-- Counts total number of paths to reach the goal state
-- Compares DFS and BFS solutions
+**Location**: `Assignment 1/`
 
-**Usage:**
+**Key Features**:
+- LSTM and GRU text classifiers
+- Multiple embedding strategies (GloVe frozen, GloVe fine-tuned, Random)
+- Hyperparameter tuning
+- Model evaluation and comparison
+
+**File**: `ag_news_classification.ipynb`
+
+[View Assignment 1 README](Assignment%201/README.md)
+
+---
+
+### Assignment 2: Water Jug Problem
+
+Classic AI problem solving using search algorithms (DFS and BFS) to measure a specific amount of water.
+
+**Location**: `Assignment 2/`
+
+**Key Features**:
+- Depth First Search (DFS) implementation
+- Breadth First Search (BFS) implementation
+- Path counting and optimization
+- Configurable jug capacities and goal states
+
+**File**: `water_jug_problem.py`
+
+**Usage**:
 ```bash
+cd "Assignment 2"
 python3 water_jug_problem.py
 ```
 
-**Example Output:**
-```
-Problem 1: 3L and 4L jugs, Goal: (0, 2)
-Solution using BFS:
-Steps to reach goal:
-Step 0: Initial State - Jug1: 0, Jug2: 0
-Step 1: Fill Jug1 - Jug1: 3, Jug2: 0
-Step 2: Pour Jug1->Jug2 - Jug1: 0, Jug2: 3
-...
-Total steps: 7
-```
+[View Assignment 2 README](Assignment%202/README.md)
 
 ---
+
+## Additional Implementation: 8-Puzzle Problem
+
+**Note**: This is an additional problem implementation (not part of the main assignments).
 
 ### 2. 8-Puzzle Problem
 
@@ -111,117 +124,124 @@ Step 1: Up
 
 ---
 
-## Performance Comparison
+## Quick Start
 
-### Water Jug Problem
-- **DFS:** Finds a solution but may not be optimal (9 steps in example)
-- **BFS:** Finds the shortest solution (7 steps in example)
-- **Path Count:** Identifies all possible paths to goal (14 paths found)
+### Run Individual Assignments
 
-### 8-Puzzle Problem
-- **Misplaced Tiles:** Simple to compute, expands 29 nodes
-- **Manhattan Distance:** More informed, expands only 15 nodes (48% fewer!)
-- Both find optimal solution (9 moves)
+**Assignment 1 (News Classification)**:
+```bash
+# Open the notebook in Jupyter or Google Colab
+cd "Assignment 1"
+jupyter notebook ag_news_classification.ipynb
+```
+
+**Assignment 2 (Water Jug Problem)**:
+```bash
+cd "Assignment 2"
+python3 water_jug_problem.py
+```
+
+### Run All Demonstrations
+
+Run the demonstration script to see both Water Jug and 8-Puzzle problems in action:
+
+```bash
+python3 demo.py
+```
+
+Or run the 8-Puzzle problem individually:
+
+```bash
+python3 eight_puzzle_problem.py
+```
+
+## Requirements
+
+### Assignment 1
+- Python 3.6+
+- Jupyter Notebook
+- TensorFlow/PyTorch
+- NumPy, Pandas, Matplotlib
+- GloVe embeddings (downloaded within notebook)
+
+### Assignment 2 & 8-Puzzle
+- Python 3.6 or higher
+- No external dependencies (uses only Python standard library)
 
 ---
 
 ## Key Concepts Demonstrated
 
 ### Search Strategies
-1. **Uninformed Search:**
+1. **Uninformed Search (Assignment 2):**
    - DFS: Stack-based, memory efficient but may not find optimal solution
    - BFS: Queue-based, guarantees shortest path, higher memory usage
 
-2. **Informed Search:**
+2. **Informed Search (8-Puzzle):**
    - A*: Uses heuristics to guide search toward goal
    - Optimality depends on admissible heuristic (never overestimates)
 
-### Heuristic Design
-- **Admissibility:** h(n) ≤ actual cost to goal (guarantees optimal solution)
-- **Informativeness:** Better heuristics expand fewer nodes
-- **Computational Cost:** Trade-off between heuristic calculation time and node expansion
+3. **Deep Learning (Assignment 1):**
+   - LSTM: Long Short-Term Memory for sequence modeling
+   - GRU: Gated Recurrent Unit for text classification
+   - Word embeddings for text representation
 
-### State Space Representation
-- **Water Jug:** State = (jug1_amount, jug2_amount)
-- **8-Puzzle:** State = 3×3 grid configuration
-- Both use hash sets to track visited states and avoid cycles
+### Performance Comparison
 
----
+**Water Jug Problem (Assignment 2)**:
+- **DFS:** Finds a solution but may not be optimal (9 steps)
+- **BFS:** Finds the shortest solution (7 steps)
+- **Path Count:** Identifies all possible paths to goal (14 paths)
 
-## Quick Start
-
-Run the demonstration script to see both problems in action:
-
-```bash
-python3 demo.py
-```
-
-Or run individual problem solvers:
-
-```bash
-python3 water_jug_problem.py
-python3 eight_puzzle_problem.py
-```
-
-## Requirements
-
-- Python 3.6 or higher
-- No external dependencies (uses only Python standard library)
-
----
-
-## Implementation Details
-
-### Water Jug Problem (`water_jug_problem.py`)
-- **Class:** `WaterJugProblem`
-- **Methods:**
-  - `get_successors()`: Generates all valid next states
-  - `dfs()`: Depth-first search implementation
-  - `bfs()`: Breadth-first search implementation
-  - `count_all_paths_dfs()`: Counts all paths to goal
-  - `print_solution()`: Formats and displays solution
-
-### 8-Puzzle Problem (`eight_puzzle_problem.py`)
-- **Classes:**
-  - `PuzzleState`: Represents a puzzle configuration
-  - `EightPuzzleSolver`: Implements A* search
-- **Methods:**
-  - `get_successors()`: Generates valid moves
-  - `heuristic_misplaced_tiles()`: Counts misplaced tiles
-  - `heuristic_manhattan_distance()`: Calculates Manhattan distance
-  - `a_star_search()`: A* algorithm implementation
-  - `print_solution()`: Displays solution path
+**8-Puzzle Problem (Additional)**:
+- **Misplaced Tiles:** Simple to compute, expands 29 nodes
+- **Manhattan Distance:** More informed, expands only 15 nodes (48% fewer!)
+- Both find optimal solution (9 moves)
 
 ---
 
 ## Learning Outcomes
 
-1. **Understanding Search Algorithms:** Practical implementation of DFS, BFS, and A*
-2. **Heuristic Design:** Comparing different heuristic functions
-3. **State Space Search:** Representing and exploring problem states
-4. **Algorithm Analysis:** Comparing time and space complexity through node expansion counts
-5. **Python Programming:** Object-oriented design, data structures (heaps, queues, sets)
+### Assignment 1: News Classification
+1. Text preprocessing and tokenization
+2. Word embeddings (GloVe) and their applications
+3. LSTM and GRU architectures for sequence modeling
+4. Hyperparameter tuning strategies
+5. Model evaluation and comparison
+
+### Assignment 2: Water Jug Problem
+1. Understanding uninformed search algorithms (DFS, BFS)
+2. State space representation and exploration
+3. Path finding and optimization
+4. Algorithm complexity comparison
+5. Python programming with data structures (stacks, queues, sets)
+
+### 8-Puzzle Problem (Additional)
+1. Understanding informed search with A* algorithm
+2. Heuristic design (admissibility and informativeness)
+3. Comparing different heuristics
+4. Priority queue implementation with heapq
+5. State space search optimization
 
 ---
 
-## Extensions and Modifications
+## Course Information
 
-Both implementations support:
-- **Variable initial and goal states**
-- **Different jug capacities (water jug)**
-- **Multiple test cases**
-- **Performance metrics (nodes expanded, path length)**
-
-You can modify the problems by changing the parameters in the `main()` function of each file.
+This is an educational project for AI Lab coursework, demonstrating:
+- Classical AI search algorithms
+- Deep learning for natural language processing
+- Problem-solving techniques in artificial intelligence
 
 ---
 
-## License
+## Repository Files
 
-This is an educational project for AI Lab coursework.
-
----
-
-## Author
-
-Implemented as part of AI Lab assignment demonstrating classical AI search algorithms.
+- `Assignment 1/` - News Classification assignment
+  - `ag_news_classification.ipynb` - Jupyter notebook
+  - `README.md` - Assignment 1 documentation
+- `Assignment 2/` - Water Jug Problem assignment
+  - `water_jug_problem.py` - Python implementation
+  - `README.md` - Assignment 2 documentation
+- `eight_puzzle_problem.py` - Additional 8-Puzzle implementation
+- `demo.py` - Demonstration script for Water Jug and 8-Puzzle problems
+- `README.md` - This file (main documentation)
