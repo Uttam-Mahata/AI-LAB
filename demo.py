@@ -4,7 +4,15 @@ AI Lab - Demonstration Script
 
 This script demonstrates both the Water Jug Problem and 8-Puzzle Problem
 with their respective search algorithms.
+
+Note: This script expects water_jug_problem.py to be in Assignment 2/
 """
+
+import sys
+import os
+
+# Add Assignment 2 directory to path to import water_jug_problem
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Assignment 2'))
 
 from water_jug_problem import WaterJugProblem
 from eight_puzzle_problem import EightPuzzleSolver
@@ -114,8 +122,10 @@ def main():
     print(" DEMONSTRATION COMPLETE ".center(70))
     print("="*70)
     print("\nFor detailed output, run:")
-    print("  python3 water_jug_problem.py")
+    print("  cd 'Assignment 2' && python3 water_jug_problem.py")
     print("  python3 eight_puzzle_problem.py")
+    print("\nFor Assignment 1 (News Classification):")
+    print("  cd 'Assignment 1' && jupyter notebook ag_news_classification.ipynb")
     print("\n")
 
 
