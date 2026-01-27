@@ -1,14 +1,3 @@
-"""
-8-Puzzle Problem Solver using A* Search with Different Heuristics
-
-This module solves the 8-puzzle problem using A* search algorithm with
-two different heuristic functions:
-1. Misplaced tiles count
-2. Manhattan distance
-
-The puzzle is a 3x3 grid with 8 numbered tiles and one empty space.
-"""
-
 import heapq
 from typing import List, Tuple, Optional, Set
 from copy import deepcopy
@@ -140,15 +129,13 @@ class EightPuzzleSolver:
         for dr, dc, move_name in moves:
             new_row, new_col = row + dr, col + dc
             
-            # Check if move is valid
-            if 0 <= new_row < PuzzleState.BOARD_SIZE and 0 <= new_col < PuzzleState.BOARD_SIZE:
-                # Create new board
+            if 0 <= new_row < PuzzleState.BOARD_SIZE and 0 <= new_col < PuzzleState.BOARD_SIZE:                # Create new board
                 new_board = deepcopy(state.board)
-                # Swap empty cell with target cell
+
+
                 new_board[row][col], new_board[new_row][new_col] = \
                     new_board[new_row][new_col], new_board[row][col]
                 
-                # Create new state
                 new_state = PuzzleState(
                     new_board, 
                     state.g_cost + 1, 
@@ -209,47 +196,37 @@ class EightPuzzleSolver:
         Returns:
             Goal state with path information, or None if no solution
         """
-        # Choose heuristic function
         if heuristic_type == "misplaced":
             heuristic_func = self.heuristic_misplaced_tiles
         else:
             heuristic_func = self.heuristic_manhattan_distance
         
-        # Initialize start state
         start = self.initial_state
         start.h_cost = heuristic_func(start)
         start.f_cost = start.g_cost + start.h_cost
         
-        # Priority queue for open set
         open_set = []
         heapq.heappush(open_set, start)
         
-        # Closed set to track visited states
         closed_set = set()
         
-        # Track states in open set for efficient lookup
         open_set_states = {start.get_board_tuple(): start}
         
         self.nodes_expanded = 0
         
         while open_set:
-            # Get state with lowest f_cost
             current = heapq.heappop(open_set)
             current_tuple = current.get_board_tuple()
             
-            # Remove from open set tracker
             if current_tuple in open_set_states:
                 del open_set_states[current_tuple]
             
-            # Check if goal is reached
             if current.board == self.goal_state.board:
                 return current
             
-            # Add to closed set
             closed_set.add(current_tuple)
             self.nodes_expanded += 1
             
-            # Explore successors
             for successor in self.get_successors(current):
                 successor_tuple = successor.get_board_tuple()
                 
@@ -257,21 +234,19 @@ class EightPuzzleSolver:
                 if successor_tuple in closed_set:
                     continue
                 
-                # Calculate costs
                 successor.h_cost = heuristic_func(successor)
                 successor.f_cost = successor.g_cost + successor.h_cost
                 
-                # Check if successor is in open set with higher cost
                 if successor_tuple in open_set_states:
                     existing = open_set_states[successor_tuple]
                     if successor.g_cost < existing.g_cost:
-                        # Update the existing state
+
+
                         existing.g_cost = successor.g_cost
                         existing.f_cost = successor.f_cost
                         existing.parent = successor.parent
                         existing.move = successor.move
                 else:
-                    # Add new state to open set
                     heapq.heappush(open_set, successor)
                     open_set_states[successor_tuple] = successor
         
@@ -325,16 +300,15 @@ class EightPuzzleSolver:
 def main():
     """Main function to demonstrate the 8-puzzle solver."""
     
-    # Define initial and goal states from problem statement
     initial_state = [
-        [2, 8, 1],
-        [0, 4, 3],
+        [1, 2, 3],
+        [8, 0, 4],
         [7, 6, 5]
     ]
     
     goal_state = [
-        [1, 2, 3],
-        [8, 0, 4],
+        [2, 8, 1],
+        [0, 4, 3],
         [7, 6, 5]
     ]
     
@@ -342,7 +316,6 @@ def main():
     print("8-PUZZLE PROBLEM SOLVER")
     print("="*60)
     
-    # Solve using Misplaced Tiles heuristic
     print("\n[1] Solving with A* using Misplaced Tiles Heuristic...")
     print("-" * 60)
     
@@ -355,7 +328,6 @@ def main():
     else:
         print("No solution found using Misplaced Tiles heuristic")
     
-    # Solve using Manhattan Distance heuristic
     print("\n[2] Solving with A* using Manhattan Distance Heuristic...")
     print("-" * 60)
     
@@ -368,7 +340,6 @@ def main():
     else:
         print("No solution found using Manhattan Distance heuristic")
     
-    # Compare the two heuristics
     print("\n" + "="*60)
     print("COMPARISON OF HEURISTICS")
     print("="*60)
@@ -389,15 +360,14 @@ def main():
         else:
             print(f"\nBoth heuristics expanded the same number of nodes.")
     
-    # Additional test case
     print("\n\n" + "="*60)
     print("Additional Test Case: Different Initial State")
     print("="*60)
     
     initial_state2 = [
         [1, 2, 3],
-        [8, 0, 4],
-        [7, 5, 6]
+        [8, 4, 0],
+        [7, 6, 5]
     ]
     
     solver3 = EightPuzzleSolver(initial_state2, goal_state)
