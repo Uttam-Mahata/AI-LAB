@@ -1,17 +1,8 @@
-#!/usr/bin/env python3
-"""
-AI Lab - Demonstration Script
-
-This script demonstrates both the Water Jug Problem and 8-Puzzle Problem
-with their respective search algorithms.
-
-Note: This script expects water_jug_problem.py to be in Assignment 2/
-"""
 
 import sys
+
 import os
 
-# Add Assignment 2 directory to path to import water_jug_problem
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Assignment 2'))
 
 from water_jug_problem import WaterJugProblem
@@ -19,7 +10,7 @@ from eight_puzzle_problem import EightPuzzleSolver
 
 
 def demo_water_jug():
-    """Demonstrate the Water Jug Problem solution."""
+    """Demonstration of the Water Jug Problem."""
     print("\n" + "="*70)
     print(" WATER JUG PROBLEM DEMONSTRATION ".center(70))
     print("="*70)
@@ -42,7 +33,7 @@ def demo_water_jug():
         problem2 = WaterJugProblem(jug1_capacity=3, jug2_capacity=4,
                                    goal_state=(0, 2), initial_state=(0, 0))
         path_count = problem2.count_all_paths_dfs()
-        print(f"\n📊 Statistics:")
+        print(f"\n Statistics:")
         print(f"  - Solution length: {len(solution)} steps")
         print(f"  - Total paths to goal: {path_count}")
 
@@ -53,8 +44,8 @@ def demo_eight_puzzle():
     print(" 8-PUZZLE PROBLEM DEMONSTRATION ".center(70))
     print("="*70)
     
-    initial = [[2, 8, 1], [0, 4, 3], [7, 6, 5]]
-    goal = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+    initial = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+    goal = [[2, 8, 1], [0, 4, 3], [7, 6, 5]]
     
     print("\nProblem Setup:")
     print("  Initial State:")
@@ -92,7 +83,7 @@ def demo_eight_puzzle():
     
     efficiency = ((solver1.nodes_expanded - solver2.nodes_expanded) / 
                   solver1.nodes_expanded * 100)
-    print(f"\n🏆 Manhattan Distance is {efficiency:.1f}% more efficient!")
+    print(f"\n Manhattan Distance is {efficiency:.1f}% more efficient!")
     
     # Show a few steps of the solution
     print("\n" + "-"*70)
@@ -106,26 +97,15 @@ def demo_eight_puzzle():
 def main():
     """Main demonstration function."""
     print("\n" + "="*70)
-    print(" AI LAB - SEARCH ALGORITHMS DEMONSTRATION ".center(70))
-    print("="*70)
-    print("\nThis demonstration showcases two classic AI problems:")
-    print("  1. Water Jug Problem (DFS & BFS)")
-    print("  2. 8-Puzzle Problem (A* with different heuristics)")
     
-    # Demonstrate Water Jug Problem
     demo_water_jug()
     
-    # Demonstrate 8-Puzzle Problem
+    print("\n" + "="*70)
+
+    
     demo_eight_puzzle()
     
     print("\n" + "="*70)
-    print(" DEMONSTRATION COMPLETE ".center(70))
-    print("="*70)
-    print("\nFor detailed output, run:")
-    print("  cd 'Assignment 2' && python3 water_jug_problem.py")
-    print("  python3 eight_puzzle_problem.py")
-    print("\nFor Assignment 1 (News Classification):")
-    print("  cd 'Assignment 1' && jupyter notebook ag_news_classification.ipynb")
     print("\n")
 
 
