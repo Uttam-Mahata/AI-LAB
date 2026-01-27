@@ -1,13 +1,3 @@
-"""
-Water Jug Problem Solver using DFS and BFS
-
-This module solves the classic water jug problem where we have two jugs
-of different capacities and need to measure a specific amount of water.
-
-Problem: Given a 3-liter jug and a 4-liter jug, measure exactly 2 liters
-in the 4-liter jug using only fill, empty, and pour operations.
-"""
-
 from collections import deque
 from typing import List, Tuple, Set, Optional
 
@@ -39,7 +29,9 @@ class WaterJugProblem:
         self.goal_state = goal_state
         self.initial_state = initial_state
         self.path_count = 0
-        self.max_depth = 20  # Maximum depth for path counting to avoid infinite loops
+        self.max_depth = 20  
+
+
     
     def get_successors(self, state: Tuple[int, int]) -> List[Tuple[Tuple[int, int], str]]:
         """
@@ -62,29 +54,29 @@ class WaterJugProblem:
         jug1, jug2 = state
         successors = []
         
-        # Operation 1: Fill jug 1
+        
         if jug1 < self.jug1_capacity:
             successors.append(((self.jug1_capacity, jug2), "Fill Jug1"))
         
-        # Operation 2: Fill jug 2
+        
         if jug2 < self.jug2_capacity:
             successors.append(((jug1, self.jug2_capacity), "Fill Jug2"))
         
-        # Operation 3: Empty jug 1
+        
         if jug1 > 0:
             successors.append(((0, jug2), "Empty Jug1"))
         
-        # Operation 4: Empty jug 2
+        
         if jug2 > 0:
             successors.append(((jug1, 0), "Empty Jug2"))
         
-        # Operation 5: Pour from jug 1 to jug 2
+        
         if jug1 > 0 and jug2 < self.jug2_capacity:
             pour_amount = min(jug1, self.jug2_capacity - jug2)
             successors.append(((jug1 - pour_amount, jug2 + pour_amount), 
                              "Pour Jug1->Jug2"))
         
-        # Operation 6: Pour from jug 2 to jug 1
+        
         if jug2 > 0 and jug1 < self.jug1_capacity:
             pour_amount = min(jug2, self.jug1_capacity - jug1)
             successors.append(((jug1 + pour_amount, jug2 - pour_amount), 
@@ -112,14 +104,13 @@ class WaterJugProblem:
             
             visited.add(state)
             
-            # Check if goal is reached
             if state == self.goal_state:
                 all_paths.append(path + [(state, "Goal Reached")])
                 self.path_count += 1
-                if len(all_paths) == 1:  # Return first path found
+                if len(all_paths) == 1:  #  first path found
                     return path + [(state, "Goal Reached")]
             
-            # Explore successors
+            
             for next_state, action in self.get_successors(state):
                 if next_state not in visited:
                     stack.append((next_state, path + [(state, action)]))
@@ -142,13 +133,13 @@ class WaterJugProblem:
         while queue:
             state, path = queue.popleft()
             
-            # Check if goal is reached
+            
             if state == self.goal_state:
                 all_paths.append(path + [(state, "Goal Reached")])
                 self.path_count += 1
                 return path + [(state, "Goal Reached")]
             
-            # Explore successors
+            
             for next_state, action in self.get_successors(state):
                 if next_state not in visited:
                     visited.add(next_state)
@@ -170,7 +161,7 @@ class WaterJugProblem:
         while stack:
             state, path = stack.pop()
             
-            # Check if goal is reached
+            
             if state == self.goal_state:
                 path_tuple = tuple(path)
                 if path_tuple not in visited_paths:
@@ -178,13 +169,12 @@ class WaterJugProblem:
                     path_count += 1
                 continue
             
-            # Avoid cycles in current path
+            
             if len(path) > self.max_depth:
                 continue
             
-            # Explore successors
             for next_state, action in self.get_successors(state):
-                if next_state not in path:  # Avoid cycles
+                if next_state not in path:  
                     stack.append((next_state, path + [next_state]))
         
         return path_count
@@ -217,11 +207,10 @@ class WaterJugProblem:
 
 
 def main():
-    """Main function to demonstrate the water jug problem solver."""
     
-    # Problem 1: Original problem (3L, 4L jugs, goal: 2L in 4L jug)
+    
     print("\n" + "="*60)
-    print("WATER JUG PROBLEM SOLVER")
+    print("WATER JUG PROBLEM")
     print("="*60)
     
     print("\nProblem 1: 3L and 4L jugs, Goal: (0, 2)")
@@ -230,7 +219,6 @@ def main():
     problem1 = WaterJugProblem(jug1_capacity=3, jug2_capacity=4, 
                                 goal_state=(0, 2), initial_state=(0, 0))
     
-    # Solve using DFS
     print("\n[1] Solving with Depth First Search (DFS)...")
     solution_dfs = problem1.dfs()
     if solution_dfs:
@@ -238,7 +226,6 @@ def main():
     else:
         print("No solution found using DFS")
     
-    # Solve using BFS
     print("\n[2] Solving with Breadth First Search (BFS)...")
     problem2 = WaterJugProblem(jug1_capacity=3, jug2_capacity=4, 
                                 goal_state=(0, 2), initial_state=(0, 0))
@@ -248,14 +235,12 @@ def main():
     else:
         print("No solution found using BFS")
     
-    # Count all paths
     print("\n[3] Counting all possible paths to goal state...")
     problem3 = WaterJugProblem(jug1_capacity=3, jug2_capacity=4, 
                                 goal_state=(0, 2), initial_state=(0, 0))
     path_count = problem3.count_all_paths_dfs()
     print(f"Total number of different paths to reach goal state: {path_count}")
     
-    # Problem 2: Different goal state (2L in 3L jug)
     print("\n\n" + "="*60)
     print("Problem 2: 3L and 4L jugs, Goal: (2, 0)")
     print("-" * 60)
@@ -268,7 +253,6 @@ def main():
     else:
         print("No solution found")
     
-    # Problem 3: Different capacities
     print("\n\n" + "="*60)
     print("Problem 3: 5L and 3L jugs, Goal: (4, 0)")
     print("-" * 60)
