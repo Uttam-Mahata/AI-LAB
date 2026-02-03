@@ -228,7 +228,7 @@ def main():
             for row in state.board:
                 print_to_both("    " + " ".join(str(x) if x != 0 else "-" for x in row))
     else:
-        print_to_both("\n❌ Stuck at local optimum")
+        print_to_both("\n Stuck at local optimum")
     
     # Test Case 2
     print_to_both("\n" + "="*70)
@@ -248,7 +248,7 @@ def main():
         path2 = solver2.get_solution_path(solution2)
         print_to_both(f"\n✓ Success! Moves: {len(path2) - 1}, Nodes: {solver2.nodes_expanded}")
     else:
-        print_to_both("\n❌ Stuck at local optimum")
+        print_to_both("\n Stuck at local optimum")
         
         print_to_both("\nRetrying with sideways moves...")
         solver2b = EightPuzzleSolver(initial_state2, goal_state)
@@ -258,7 +258,7 @@ def main():
             path2b = solver2b.get_solution_path(solution2b)
             print_to_both(f"✓ Success with sideways! Moves: {len(path2b) - 1}, Nodes: {solver2b.nodes_expanded}")
         else:
-            print_to_both("❌ Still stuck")
+            print_to_both(" Still stuck")
     
     # Test Case 3
     print_to_both("\n" + "="*70)
@@ -278,7 +278,7 @@ def main():
         path3 = solver3.get_solution_path(solution3)
         print_to_both(f"\n✓ Success! Moves: {len(path3) - 1}, Nodes: {solver3.nodes_expanded}")
     else:
-        print_to_both("\n❌ Stuck at local optimum")
+        print_to_both("\n Stuck at local optimum")
         
         print_to_both("\nRetrying with sideways moves...")
         solver3b = EightPuzzleSolver(initial_state3, goal_state)
@@ -288,7 +288,7 @@ def main():
             path3b = solver3b.get_solution_path(solution3b)
             print_to_both(f"✓ Success with sideways! Moves: {len(path3b) - 1}, Nodes: {solver3b.nodes_expanded}")
         else:
-            print_to_both("❌ Still stuck")
+            print_to_both(" Still stuck")
     
     print_to_both("\n" + "="*70)
     print_to_both("Summary:")
