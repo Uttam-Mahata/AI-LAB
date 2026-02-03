@@ -186,6 +186,140 @@ class EightPuzzleSolver:
                     distance += abs(i - goal_row) + abs(j - goal_col)
         return distance
     
+    def hill_climbing_search(self, heuristic_type: str = "manhattan", max_iterations: int = 10000) -> Optional[PuzzleState]:
+        """
+        Solve the puzzle using Hill Climbing algorithm.
+        
+        Hill Climbing is a local search algorithm that:
+        1. Starts from initial state
+        2. Evaluates all neighbors
+        3. Moves to the best neighbor (with lowest heuristic cost)
+        4. Repeats until no neighbor is better (local optimum) or goal is reached
+        
+        Args:
+            heuristic_type: Type of heuristic ("misplaced" or "manhattan")
+            max_iterations: Maximum number of iterations to prevent infinite loops
+            
+        Returns:
+            Goal state with path information, or None if stuck at local optimum
+        """
+        if heuristic_type == "misplaced":
+            heuristic_func = self.heuristic_misplaced_tiles
+        else:
+            heuristic_func = self.heuristic_manhattan_distance
+        
+        current = self.initial_state
+        current.h_cost = heuristic_func(current)
+        
+        self.nodes_expanded = 0
+        visited_states = set()
+        
+        for iteration in range(max_iterations):
+            # Check if goal reached
+            if current.board == self.goal_state.board:
+                return current
+            
+            # Mark current state as visited
+            visited_states.add(current.get_board_tuple())
+            
+            # Get all successors
+            successors = self.get_successors(current)
+            self.nodes_expanded += 1
+            
+            # Calculate heuristic for all successors
+            best_successor = None
+            best_heuristic = float('inf')
+            
+            for successor in successors:
+                # Skip already visited states to avoid cycles
+                if successor.get_board_tuple() in visited_states:
+                    continue
+                    
+                successor.h_cost = heuristic_func(successor)
+                
+                if successor.h_cost < best_heuristic:
+                    best_heuristic = successor.h_cost
+                    best_successor = successor
+            
+            # If no better successor found, we're stuck at local optimum
+            if best_successor is None or best_heuristic >= current.h_cost:
+                return None  # Stuck at local optimum
+            
+            # Move to best successor
+            current = best_successor
+        
+        return None  # Max iterations reached
+
+    def hill_climbing_with_sideways_moves(self, heuristic_type: str = "manhattan", max_iterations: int = 10000, max_sideways: int = 100) -> Optional[PuzzleState]:
+        """
+        Hill Climbing with sideways moves to escape plateaus.
+        
+        Allows moving to neighbors with the same heuristic value for a limited number of times.
+        
+        Args:
+            heuristic_type: Type of heuristic ("misplaced" or "manhattan")
+            max_iterations: Maximum number of iterations
+            max_sideways: Maximum number of consecutive sideways moves allowed
+            
+        Returns:
+            Goal state with path information, or None if stuck at local optimum
+        """
+        if heuristic_type == "misplaced":
+            heuristic_func = self.heuristic_misplaced_tiles
+        else:
+            heuristic_func = self.heuristic_manhattan_distance
+        
+        current = self.initial_state
+        current.h_cost = heuristic_func(current)
+        
+        self.nodes_expanded = 0
+        visited_states = set()
+        sideways_count = 0
+        
+        for iteration in range(max_iterations):
+            # Check if goal reached
+            if current.board == self.goal_state.board:
+                return current
+            
+            # Mark current state as visited
+            visited_states.add(current.get_board_tuple())
+            
+            # Get all successors
+            successors = self.get_successors(current)
+            self.nodes_expanded += 1
+            
+            # Calculate heuristic for all successors
+            best_successor = None
+            best_heuristic = float('inf')
+            
+            for successor in successors:
+                # Skip already visited states to avoid cycles
+                if successor.get_board_tuple() in visited_states:
+                    continue
+                    
+                successor.h_cost = heuristic_func(successor)
+                
+                if successor.h_cost < best_heuristic:
+                    best_heuristic = successor.h_cost
+                    best_successor = successor
+            
+            # Check if we can move
+            if best_successor is None:
+                return None  # No unvisited neighbors
+            
+            # If better successor found, move to it
+            if best_heuristic < current.h_cost:
+                current = best_successor
+                sideways_count = 0  # Reset sideways counter
+            # Allow sideways moves (same heuristic value)
+            elif best_heuristic == current.h_cost and sideways_count < max_sideways:
+                current = best_successor
+                sideways_count += 1
+            else:
+                return None  # Stuck at local optimum or exceeded sideways limit
+        
+        return None  # Max iterations reached
+
     def a_star_search(self, heuristic_type: str = "manhattan") -> Optional[PuzzleState]:
         """
         Solve the puzzle using A* search algorithm.
@@ -298,86 +432,261 @@ class EightPuzzleSolver:
 
 
 def main():
-    """Main function to demonstrate the 8-puzzle solver."""
+    """Main function to demonstrate the 8-puzzle solver with Hill Climbing."""
     
-    initial_state = [
+    # Redirect output to file as well
+    import sys
+    from io import StringIO
+    
+    output_buffer = StringIO()
+    
+    def print_to_both(*args, **kwargs):
+        """Print to both console and file buffer."""
+        print(*args, **kwargs)
+        print(*args, **kwargs, file=output_buffer)
+    
+    print_to_both("\n" + "="*70)
+    print_to_both("8-PUZZLE PROBLEM SOLVER USING HILL CLIMBING APPROACH")
+    print_to_both("="*70)
+    
+    print_to_both("\nProblem Description:")
+    print_to_both("Hill Climbing is a local search algorithm that:")
+    print_to_both("1. Starts from the initial state")
+    print_to_both("2. Evaluates all neighboring states")
+    print_to_both("3. Moves to the neighbor with the best (lowest) heuristic value")
+    print_to_both("4. Repeats until goal is reached or no better neighbor exists")
+    print_to_both("\nLimitation: Hill Climbing can get stuck at local optima.")
+    print_to_both("Solution: Use Hill Climbing with Sideways Moves or Random Restarts.")
+    
+    # Define goal state for all tests
+    goal_state = [
         [1, 2, 3],
         [8, 0, 4],
         [7, 6, 5]
     ]
     
-    goal_state = [
-        [2, 8, 1],
-        [0, 4, 3],
-        [7, 6, 5]
-    ]
+    # Test Case 1: Simple case (1 move away) - Should work
+    print_to_both("\n" + "="*70)
+    print_to_both("TEST CASE 1: Simple Problem (1 move from goal)")
+    print_to_both("="*70)
     
-    print("\n" + "="*60)
-    print("8-PUZZLE PROBLEM SOLVER")
-    print("="*60)
-    
-    print("\n[1] Solving with A* using Misplaced Tiles Heuristic...")
-    print("-" * 60)
-    
-    solver1 = EightPuzzleSolver(initial_state, goal_state)
-    solution1 = solver1.a_star_search(heuristic_type="misplaced")
-    
-    if solution1:
-        path1 = solver1.get_solution_path(solution1)
-        solver1.print_solution(path1, "misplaced tiles")
-    else:
-        print("No solution found using Misplaced Tiles heuristic")
-    
-    print("\n[2] Solving with A* using Manhattan Distance Heuristic...")
-    print("-" * 60)
-    
-    solver2 = EightPuzzleSolver(initial_state, goal_state)
-    solution2 = solver2.a_star_search(heuristic_type="manhattan")
-    
-    if solution2:
-        path2 = solver2.get_solution_path(solution2)
-        solver2.print_solution(path2, "manhattan distance")
-    else:
-        print("No solution found using Manhattan Distance heuristic")
-    
-    print("\n" + "="*60)
-    print("COMPARISON OF HEURISTICS")
-    print("="*60)
-    if solution1 and solution2:
-        print(f"Misplaced Tiles:")
-        print(f"  - Moves: {len(path1) - 1}")
-        print(f"  - Nodes Expanded: {solver1.nodes_expanded}")
-        print(f"\nManhattan Distance:")
-        print(f"  - Moves: {len(path2) - 1}")
-        print(f"  - Nodes Expanded: {solver2.nodes_expanded}")
-        
-        if solver2.nodes_expanded < solver1.nodes_expanded:
-            print(f"\nManhattan Distance is more efficient!")
-            print(f"It expanded {solver1.nodes_expanded - solver2.nodes_expanded} fewer nodes.")
-        elif solver1.nodes_expanded < solver2.nodes_expanded:
-            print(f"\nMisplaced Tiles is more efficient!")
-            print(f"It expanded {solver2.nodes_expanded - solver1.nodes_expanded} fewer nodes.")
-        else:
-            print(f"\nBoth heuristics expanded the same number of nodes.")
-    
-    print("\n\n" + "="*60)
-    print("Additional Test Case: Different Initial State")
-    print("="*60)
-    
-    initial_state2 = [
+    initial_state1 = [
         [1, 2, 3],
         [8, 4, 0],
         [7, 6, 5]
     ]
     
-    solver3 = EightPuzzleSolver(initial_state2, goal_state)
-    solution3 = solver3.a_star_search(heuristic_type="manhattan")
+    print_to_both("\nInitial State:")
+    for row in initial_state1:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\nGoal State:")
+    for row in goal_state:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\n[1] Solving with Hill Climbing (Manhattan Distance)...")
+    print_to_both("-" * 70)
+    
+    solver1 = EightPuzzleSolver(initial_state1, goal_state)
+    solution1 = solver1.hill_climbing_search(heuristic_type="manhattan")
+    
+    if solution1:
+        path1 = solver1.get_solution_path(solution1)
+        print_to_both(f"\n✓ SUCCESS! Hill Climbing found a solution.")
+        print_to_both(f"  - Number of moves: {len(path1) - 1}")
+        print_to_both(f"  - Nodes expanded: {solver1.nodes_expanded}")
+        print_to_both(f"\nSolution Steps:")
+        
+        for i, state in enumerate(path1):
+            print_to_both(f"\nStep {i}: {state.move}")
+            print_to_both(f"  Heuristic cost (h): {state.h_cost}")
+            for row in state.board:
+                print_to_both("    " + " ".join(str(x) if x != 0 else "-" for x in row))
+    else:
+        print_to_both(f"\n❌ Hill Climbing got stuck at a local optimum!")
+    
+    # Test Case 2: Medium complexity (few moves away)
+    print_to_both("\n" + "="*70)
+    print_to_both("TEST CASE 2: Medium Complexity Problem")
+    print_to_both("="*70)
+    
+    initial_state2 = [
+        [1, 2, 3],
+        [0, 8, 4],
+        [7, 6, 5]
+    ]
+    
+    print_to_both("\nInitial State:")
+    for row in initial_state2:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\nGoal State:")
+    for row in goal_state:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\n[2] Solving with Hill Climbing (Manhattan Distance)...")
+    print_to_both("-" * 70)
+    
+    solver2 = EightPuzzleSolver(initial_state2, goal_state)
+    solution2 = solver2.hill_climbing_search(heuristic_type="manhattan")
+    
+    if solution2:
+        path2 = solver2.get_solution_path(solution2)
+        print_to_both(f"\n✓ SUCCESS! Hill Climbing found a solution.")
+        print_to_both(f"  - Number of moves: {len(path2) - 1}")
+        print_to_both(f"  - Nodes expanded: {solver2.nodes_expanded}")
+        print_to_both(f"\nSolution Steps:")
+        
+        for i, state in enumerate(path2):
+            print_to_both(f"\nStep {i}: {state.move}")
+            print_to_both(f"  Heuristic cost (h): {state.h_cost}")
+            for row in state.board:
+                print_to_both("    " + " ".join(str(x) if x != 0 else "-" for x in row))
+    else:
+        print_to_both(f"\n❌ Hill Climbing got stuck at a local optimum!")
+        
+        # Try with sideways moves
+        print_to_both(f"\n[2b] Retrying with Hill Climbing + Sideways Moves...")
+        print_to_both("-" * 70)
+        
+        solver2b = EightPuzzleSolver(initial_state2, goal_state)
+        solution2b = solver2b.hill_climbing_with_sideways_moves(heuristic_type="manhattan")
+        
+        if solution2b:
+            path2b = solver2b.get_solution_path(solution2b)
+            print_to_both(f"\n✓ SUCCESS with sideways moves!")
+            print_to_both(f"  - Number of moves: {len(path2b) - 1}")
+            print_to_both(f"  - Nodes expanded: {solver2b.nodes_expanded}")
+        else:
+            print_to_both(f"\n❌ Still stuck at local optimum even with sideways moves.")
+    
+    # Test Case 3: Complex problem - likely to fail with basic Hill Climbing
+    print_to_both("\n" + "="*70)
+    print_to_both("TEST CASE 3: Complex Problem (Demonstrates Limitation)")
+    print_to_both("="*70)
+    
+    initial_state3 = [
+        [1, 2, 3],
+        [8, 6, 4],
+        [7, 0, 5]
+    ]
+    
+    print_to_both("\nInitial State:")
+    for row in initial_state3:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\nGoal State:")
+    for row in goal_state:
+        print_to_both("  " + " ".join(str(x) if x != 0 else "-" for x in row))
+    
+    print_to_both("\n[3] Solving with Hill Climbing (Manhattan Distance)...")
+    print_to_both("-" * 70)
+    
+    solver3 = EightPuzzleSolver(initial_state3, goal_state)
+    solution3 = solver3.hill_climbing_search(heuristic_type="manhattan")
     
     if solution3:
         path3 = solver3.get_solution_path(solution3)
-        solver3.print_solution(path3, "manhattan distance")
+        print_to_both(f"\n✓ SUCCESS! Hill Climbing found a solution.")
+        print_to_both(f"  - Number of moves: {len(path3) - 1}")
+        print_to_both(f"  - Nodes expanded: {solver3.nodes_expanded}")
     else:
-        print("No solution found")
+        print_to_both(f"\n❌ Hill Climbing got stuck at a local optimum!")
+        print_to_both("This demonstrates the main limitation of Hill Climbing.")
+        
+        # Try with sideways moves
+        print_to_both(f"\n[3b] Retrying with Hill Climbing + Sideways Moves...")
+        print_to_both("-" * 70)
+        
+        solver3b = EightPuzzleSolver(initial_state3, goal_state)
+        solution3b = solver3b.hill_climbing_with_sideways_moves(heuristic_type="manhattan")
+        
+        if solution3b:
+            path3b = solver3b.get_solution_path(solution3b)
+            print_to_both(f"\n✓ SUCCESS with sideways moves!")
+            print_to_both(f"  - Number of moves: {len(path3b) - 1}")
+            print_to_both(f"  - Nodes expanded: {solver3b.nodes_expanded}")
+        else:
+            print_to_both(f"\n❌ Still stuck at local optimum even with sideways moves.")
+    
+    # Comparison with A* for reference
+    print_to_both("\n" + "="*70)
+    print_to_both("COMPARISON: Hill Climbing vs A* Search")
+    print_to_both("="*70)
+    
+    print_to_both("\nFor TEST CASE 3, let's compare with A* Search:")
+    print_to_both("-" * 70)
+    
+    solver_astar = EightPuzzleSolver(initial_state3, goal_state)
+    solution_astar = solver_astar.a_star_search(heuristic_type="manhattan")
+    
+    if solution_astar:
+        path_astar = solver_astar.get_solution_path(solution_astar)
+        print_to_both(f"\nA* Search Results:")
+        print_to_both(f"  - Moves: {len(path_astar) - 1}")
+        print_to_both(f"  - Nodes Expanded: {solver_astar.nodes_expanded}")
+        print_to_both(f"  - Status: ✓ Found optimal solution")
+    
+    # Summary
+    print_to_both("\n" + "="*70)
+    print_to_both("ALGORITHM COMPARISON SUMMARY")
+    print_to_both("="*70)
+    print_to_both("\n┌──────────────────────────────┬────────────┬─────────────────┐")
+    print_to_both("│ Algorithm                    │ Test Case  │ Result          │")
+    print_to_both("├──────────────────────────────┼────────────┼─────────────────┤")
+    
+    if solution1:
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     1      │ ✓ Success ({len(path1)-1} moves) │")
+    else:
+        print_to_both("│ Hill Climbing (Manhattan)    │     1      │ ❌ Failed       │")
+    
+    if solution2:
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     2      │ ✓ Success ({len(path2)-1} moves) │")
+    else:
+        print_to_both("│ Hill Climbing (Manhattan)    │     2      │ ❌ Failed       │")
+    
+    if solution3:
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     3      │ ✓ Success ({len(path3)-1} moves) │")
+    else:
+        print_to_both("│ Hill Climbing (Manhattan)    │     3      │ ❌ Failed       │")
+    
+    print_to_both(f"│ A* Search (Manhattan)        │     3      │ ✓ Success ({len(path_astar)-1} moves) │")
+    print_to_both("└──────────────────────────────┴────────────┴─────────────────┘")
+    
+    print_to_both("\n" + "="*70)
+    print_to_both("KEY OBSERVATIONS")
+    print_to_both("="*70)
+    print_to_both("\n✓ Advantages of Hill Climbing:")
+    print_to_both("  • Very fast for simple problems (fewer nodes expanded)")
+    print_to_both("  • Low memory requirements")
+    print_to_both("  • Simple to implement and understand")
+    
+    print_to_both("\n❌ Limitations of Hill Climbing:")
+    print_to_both("  • Can get stuck at local optima")
+    print_to_both("  • May fail to find a solution even when one exists")
+    print_to_both("  • Not guaranteed to find the optimal solution")
+    
+    print_to_both("\n💡 Improvements:")
+    print_to_both("  • Hill Climbing with Sideways Moves: Helps escape plateaus")
+    print_to_both("  • Random Restart: Try multiple starting points")
+    print_to_both("  • Simulated Annealing: Allow occasional uphill moves")
+    
+    print_to_both("\n✓ Advantages of A* Search:")
+    print_to_both("  • Guaranteed to find optimal solution (if exists)")
+    print_to_both("  • Complete: Always finds solution if one exists")
+    print_to_both("  • Uses admissible heuristics effectively")
+    
+    print_to_both("\n" + "="*70)
+    print_to_both("END OF 8-PUZZLE PROBLEM DEMONSTRATION")
+    print_to_both("="*70)
+    print_to_both()
+    
+    # Save output to file
+    output_file = "eight_puzzle_hill_climbing_output.txt"
+    with open(output_file, 'w') as f:
+        f.write(output_buffer.getvalue())
+    
+    print(f"\n✓ Output saved to: {output_file}")
 
 
 if __name__ == "__main__":
