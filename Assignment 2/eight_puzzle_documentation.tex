@@ -11,7 +11,7 @@
 \geometry{margin=1in}
 
 \title{The 8-Puzzle Problem: \\
-       Hill Climbing and A* Search Algorithms}
+       Hill Climbing Algorithm}
 \author{AI Lab Assignment}
 \date{\today}
 
@@ -24,7 +24,7 @@
 \maketitle
 
 \begin{abstract}
-This document provides a comprehensive mathematical treatment of the 8-puzzle problem and its solution using Hill Climbing and A* search algorithms. We present formal definitions, algorithm pseudocode, heuristic functions, complexity analysis, and experimental results.
+This document provides a mathematical treatment of the 8-puzzle problem and its solution using the Hill Climbing algorithm. We present formal definitions, algorithm pseudocode, heuristic functions, complexity analysis, and experimental results.
 \end{abstract}
 
 \tableofcontents
@@ -65,7 +65,7 @@ The state space $\mathcal{S}$ is the set of all reachable states from an initial
 
 \section{Heuristic Functions}
 
-Heuristic functions estimate the cost from a current state to the goal state. A good heuristic function is both \textit{admissible} (never overestimates) and \textit{informative} (provides useful guidance).
+Heuristic functions estimate the cost from a current state to the goal state.
 
 \subsection{Manhattan Distance Heuristic}
 
@@ -77,14 +77,6 @@ h_M(S) = \sum_{i=1}^{8} |x_i - x_i^*| + |y_i - y_i^*|
 where $(x_i, y_i)$ is the current position of tile $i$ and $(x_i^*, y_i^*)$ is its goal position.
 \end{definition}
 
-\begin{theorem}[Admissibility of Manhattan Distance]
-The Manhattan distance heuristic $h_M$ is admissible for the 8-puzzle problem.
-\end{theorem}
-
-\begin{proof}
-Each tile must move at least the Manhattan distance to reach its goal position. Since each move changes the position of exactly one tile by one unit, the Manhattan distance never overestimates the minimum number of moves required.
-\end{proof}
-
 \subsection{Misplaced Tiles Heuristic}
 
 \begin{definition}[Misplaced Tiles]
@@ -94,14 +86,6 @@ h_T(S) = |\{i : s_i \neq s_i^* \land s_i \neq 0\}|
 \]
 where $s_i$ is the value at position $i$ in state $S$ and $s_i^*$ is the goal value.
 \end{definition}
-
-\begin{theorem}[Admissibility of Misplaced Tiles]
-The misplaced tiles heuristic $h_T$ is admissible for the 8-puzzle problem.
-\end{theorem}
-
-\begin{proof}
-Each misplaced tile requires at least one move to reach its goal position. Therefore, $h_T(S)$ never overestimates the actual cost.
-\end{proof}
 
 \subsection{Dominance Relation}
 
@@ -135,11 +119,11 @@ Hill Climbing is a local search algorithm that iteratively moves to neighboring 
     \While{$current \neq S_{goal}$}
         \State $neighbors \gets \text{GetSuccessors}(current) \setminus visited$
         \If{$neighbors = \emptyset$}
-            \State \Return \textsc{Failure} \Comment{Stuck at local optimum}
+            \State \Return \textsc{Failure}
         \EndIf
         \State $best \gets \arg\min_{n \in neighbors} h(n)$
         \If{$h(best) \geq h(current)$}
-            \State \Return \textsc{Failure} \Comment{No improvement}
+            \State \Return \textsc{Failure}
         \EndIf
         \State $current \gets best$
         \State $visited \gets visited \cup \{best\}$
@@ -150,8 +134,6 @@ Hill Climbing is a local search algorithm that iteratively moves to neighboring 
 \end{algorithm}
 
 \subsection{Hill Climbing with Sideways Moves}
-
-To escape plateaus, we allow a limited number of sideways moves (moves to states with equal heuristic value).
 
 \begin{algorithm}
 \caption{Hill Climbing with Sideways Moves}
@@ -184,12 +166,12 @@ To escape plateaus, we allow a limited number of sideways moves (moves to states
 
 \subsection{Complexity Analysis}
 
-\begin{theorem}[Time Complexity of Hill Climbing]
-In the worst case, Hill Climbing explores $O(b^d)$ nodes, where $b$ is the branching factor and $d$ is the solution depth. However, in practice, it typically explores $O(d)$ nodes for problems without local optima.
+\begin{theorem}[Time Complexity]
+Hill Climbing typically explores $O(d)$ nodes where $d$ is the number of steps taken, though it can explore $O(b^d)$ nodes in worst case where $b$ is the branching factor.
 \end{theorem}
 
 \begin{theorem}[Space Complexity]
-Hill Climbing has space complexity $O(|visited|) = O(d)$ in the best case, where $d$ is the number of steps taken.
+Hill Climbing has space complexity $O(d)$ where $d$ is the number of steps taken.
 \end{theorem}
 
 \subsection{Limitations}
@@ -201,87 +183,11 @@ Hill Climbing suffers from three main problems:
     \item \textbf{Ridges}: Sequences of local maxima difficult to navigate
 \end{enumerate}
 
-\section{A* Search Algorithm}
-
-A* is an informed search algorithm that combines actual cost and heuristic estimates to find optimal solutions.
-
-\subsection{Cost Function}
-
-\begin{definition}[A* Evaluation Function]
-For a state $S$, A* uses the evaluation function:
-\[
-f(S) = g(S) + h(S)
-\]
-where:
-\begin{itemize}
-    \item $g(S)$ is the actual cost from the start state to $S$
-    \item $h(S)$ is the heuristic estimate from $S$ to the goal
-    \item $f(S)$ is the estimated total cost through $S$
-\end{itemize}
-\end{definition}
-
-\subsection{Algorithm}
-
-\begin{algorithm}
-\caption{A* Search}
-\begin{algorithmic}[1]
-\Procedure{AStar}{$S_0, S_{goal}, h$}
-    \State $openSet \gets$ priority queue containing $S_0$
-    \State $closedSet \gets \emptyset$
-    \State $g(S_0) \gets 0$
-    \State $f(S_0) \gets h(S_0)$
-    \While{$openSet \neq \emptyset$}
-        \State $current \gets$ node in $openSet$ with minimum $f$ value
-        \If{$current = S_{goal}$}
-            \State \Return \textsc{ReconstructPath}($current$)
-        \EndIf
-        \State Remove $current$ from $openSet$
-        \State Add $current$ to $closedSet$
-        \For{each $neighbor$ in GetSuccessors($current$)}
-            \If{$neighbor \in closedSet$}
-                \State \textbf{continue}
-            \EndIf
-            \State $tentative\_g \gets g(current) + 1$
-            \If{$neighbor \notin openSet$ \textbf{or} $tentative\_g < g(neighbor)$}
-                \State $g(neighbor) \gets tentative\_g$
-                \State $f(neighbor) \gets g(neighbor) + h(neighbor)$
-                \State $parent(neighbor) \gets current$
-                \If{$neighbor \notin openSet$}
-                    \State Add $neighbor$ to $openSet$
-                \EndIf
-            \EndIf
-        \EndFor
-    \EndWhile
-    \State \Return \textsc{Failure}
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Optimality and Completeness}
-
-\begin{theorem}[Optimality of A*]
-If the heuristic function $h$ is admissible, A* is guaranteed to find an optimal solution.
-\end{theorem}
-
-\begin{theorem}[Completeness of A*]
-A* is complete: if a solution exists, A* will find it.
-\end{theorem}
-
-\subsection{Complexity Analysis}
-
-\begin{theorem}[Time Complexity of A*]
-The time complexity of A* is $O(b^d)$ in the worst case, where $b$ is the branching factor and $d$ is the solution depth. With a good heuristic, this can be reduced significantly.
-\end{theorem}
-
-\begin{theorem}[Space Complexity of A*]
-A* has space complexity $O(b^d)$ as it stores all generated nodes.
-\end{theorem}
-
 \section{Experimental Results}
 
 \subsection{Test Cases}
 
-We evaluated both algorithms on several 8-puzzle instances:
+We evaluated Hill Climbing on several 8-puzzle instances:
 
 \subsubsection{Test Case 1: Simple Problem}
 
@@ -306,7 +212,6 @@ S_{goal} = \begin{bmatrix}
 \textbf{Results:}
 \begin{itemize}
     \item Hill Climbing (Manhattan): 1 move, 1 node expanded
-    \item A* Search (Manhattan): 1 move, 1 node expanded
 \end{itemize}
 
 \subsubsection{Test Case 2: Medium Complexity}
@@ -332,53 +237,44 @@ S_{goal} = \begin{bmatrix}
 \textbf{Results:}
 \begin{itemize}
     \item Hill Climbing (Manhattan): 1 move, 1 node expanded
-    \item A* Search (Manhattan): 1 move, 1 node expanded
 \end{itemize}
 
-\subsection{Performance Comparison}
+\subsection{Performance Analysis}
 
 \begin{table}[h]
 \centering
 \begin{tabular}{|l|c|c|}
 \hline
-\textbf{Algorithm} & \textbf{Moves} & \textbf{Nodes Expanded} \\
+\textbf{Heuristic} & \textbf{Moves} & \textbf{Nodes Expanded} \\
 \hline
-Hill Climbing (Manhattan) & 1 & 1 \\
-Hill Climbing (Misplaced) & Variable & Variable \\
-A* (Manhattan) & 1 & 1 \\
-A* (Misplaced) & 1 & Variable \\
+Manhattan Distance & 1 & 1 \\
+Misplaced Tiles & Variable & Variable \\
 \hline
 \end{tabular}
-\caption{Algorithm comparison on simple test cases}
+\caption{Hill Climbing performance on simple test cases}
 \end{table}
 
-\subsection{Analysis}
+\subsection{Algorithm Characteristics}
 
-\textbf{Advantages of Hill Climbing:}
+\textbf{Advantages:}
 \begin{itemize}
     \item Low memory requirements: $O(d)$
     \item Fast execution for problems without local optima
     \item Simple implementation
 \end{itemize}
 
-\textbf{Disadvantages of Hill Climbing:}
+\textbf{Disadvantages:}
 \begin{itemize}
     \item Can get stuck at local optima
     \item Not guaranteed to find a solution
     \item Not guaranteed to find optimal solution
 \end{itemize}
 
-\textbf{Advantages of A*:}
+\textbf{Improvements:}
 \begin{itemize}
-    \item Guaranteed to find optimal solution (with admissible heuristic)
-    \item Complete: always finds solution if one exists
-    \item Efficient with good heuristics
-\end{itemize}
-
-\textbf{Disadvantages of A*:}
-\begin{itemize}
-    \item High memory requirements: $O(b^d)$
-    \item Can be slow for complex problems
+    \item Sideways moves: Help escape plateaus
+    \item Random restart: Try multiple starting points
+    \item Simulated annealing: Allow occasional uphill moves
 \end{itemize}
 
 \section{Mathematical Properties}
@@ -411,20 +307,23 @@ Average: $\frac{4(2) + 4(3) + 1(4)}{9} = \frac{24}{9} \approx 2.67$
 
 \section{Conclusion}
 
-We have presented a comprehensive mathematical treatment of the 8-puzzle problem and two solution approaches: Hill Climbing and A* search. While Hill Climbing offers simplicity and efficiency for easy problems, A* provides optimality guarantees at the cost of higher memory usage.
+We have presented a mathematical treatment of the 8-puzzle problem using the Hill Climbing algorithm. Hill Climbing offers simplicity and efficiency for problems without local optima, though it can get stuck and fail to find solutions.
 
-The choice between algorithms depends on the problem characteristics:
+The algorithm is best suited for:
 \begin{itemize}
-    \item Use Hill Climbing for: simple problems, memory-constrained environments, quick approximate solutions
-    \item Use A* for: problems requiring optimal solutions, when memory is available, guaranteed completeness
+    \item Simple problems with clear gradient toward goal
+    \item Memory-constrained environments
+    \item Quick approximate solutions
+    \item Cases where optimal solution is not required
 \end{itemize}
+
+Variants like sideways moves and random restart can improve performance by helping escape local optima.
 
 \section{References}
 
 \begin{enumerate}
     \item Russell, S., \& Norvig, P. (2020). \textit{Artificial Intelligence: A Modern Approach} (4th ed.). Pearson.
     \item Pearl, J. (1984). \textit{Heuristics: Intelligent Search Strategies for Computer Problem Solving}. Addison-Wesley.
-    \item Korf, R. E. (1985). Depth-first iterative-deepening: An optimal admissible tree search. \textit{Artificial Intelligence}, 27(1), 97-109.
 \end{enumerate}
 
 \end{document}
