@@ -123,10 +123,10 @@ ALGORITHM COMPARISON SUMMARY
 ┌──────────────────────────────┬────────────┬─────────────────┐
 │ Algorithm                    │ Test Case  │ Result          │
 ├──────────────────────────────┼────────────┼─────────────────┤
-│ Hill Climbing (Manhattan)    │     1      │ ✓ Success (1 moves) │
-│ Hill Climbing (Manhattan)    │     2      │ ✓ Success (1 moves) │
-│ Hill Climbing (Manhattan)    │     3      │ ✓ Success (1 moves) │
-│ A* Search (Manhattan)        │     3      │ ✓ Success (1 moves) │
+│ Hill Climbing (Manhattan)    │     1      │ ✓ Success (1 move) │
+│ Hill Climbing (Manhattan)    │     2      │ ✓ Success (1 move) │
+│ Hill Climbing (Manhattan)    │     3      │ ✓ Success (1 move) │
+│ A* Search (Manhattan)        │     3      │ ✓ Success (1 move) │
 └──────────────────────────────┴────────────┴─────────────────┘
 
 ======================================================================
