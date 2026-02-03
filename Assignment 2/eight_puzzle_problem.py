@@ -636,21 +636,29 @@ def main():
     print_to_both("├──────────────────────────────┼────────────┼─────────────────┤")
     
     if solution1:
-        print_to_both(f"│ Hill Climbing (Manhattan)    │     1      │ ✓ Success ({len(path1)-1} moves) │")
+        moves1 = len(path1)-1
+        move_word1 = "move" if moves1 == 1 else "moves"
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     1      │ ✓ Success ({moves1} {move_word1}) │")
     else:
         print_to_both("│ Hill Climbing (Manhattan)    │     1      │ ❌ Failed       │")
     
     if solution2:
-        print_to_both(f"│ Hill Climbing (Manhattan)    │     2      │ ✓ Success ({len(path2)-1} moves) │")
+        moves2 = len(path2)-1
+        move_word2 = "move" if moves2 == 1 else "moves"
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     2      │ ✓ Success ({moves2} {move_word2}) │")
     else:
         print_to_both("│ Hill Climbing (Manhattan)    │     2      │ ❌ Failed       │")
     
     if solution3:
-        print_to_both(f"│ Hill Climbing (Manhattan)    │     3      │ ✓ Success ({len(path3)-1} moves) │")
+        moves3 = len(path3)-1
+        move_word3 = "move" if moves3 == 1 else "moves"
+        print_to_both(f"│ Hill Climbing (Manhattan)    │     3      │ ✓ Success ({moves3} {move_word3}) │")
     else:
         print_to_both("│ Hill Climbing (Manhattan)    │     3      │ ❌ Failed       │")
     
-    print_to_both(f"│ A* Search (Manhattan)        │     3      │ ✓ Success ({len(path_astar)-1} moves) │")
+    moves_astar = len(path_astar)-1
+    move_word_astar = "move" if moves_astar == 1 else "moves"
+    print_to_both(f"│ A* Search (Manhattan)        │     3      │ ✓ Success ({moves_astar} {move_word_astar}) │")
     print_to_both("└──────────────────────────────┴────────────┴─────────────────┘")
     
     print_to_both("\n" + "="*70)
