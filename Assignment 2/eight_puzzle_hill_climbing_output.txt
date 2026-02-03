@@ -1,0 +1,159 @@
+
+======================================================================
+8-PUZZLE PROBLEM SOLVER USING HILL CLIMBING APPROACH
+======================================================================
+
+Problem Description:
+Hill Climbing is a local search algorithm that:
+1. Starts from the initial state
+2. Evaluates all neighboring states
+3. Moves to the neighbor with the best (lowest) heuristic value
+4. Repeats until goal is reached or no better neighbor exists
+
+Limitation: Hill Climbing can get stuck at local optima.
+Solution: Use Hill Climbing with Sideways Moves or Random Restarts.
+
+======================================================================
+TEST CASE 1: Simple Problem (1 move from goal)
+======================================================================
+
+Initial State:
+  1 2 3
+  8 4 -
+  7 6 5
+
+Goal State:
+  1 2 3
+  8 - 4
+  7 6 5
+
+[1] Solving with Hill Climbing (Manhattan Distance)...
+----------------------------------------------------------------------
+
+✓ SUCCESS! Hill Climbing found a solution.
+  - Number of moves: 1
+  - Nodes expanded: 1
+
+Solution Steps:
+
+Step 0: Initial
+  Heuristic cost (h): 1
+    1 2 3
+    8 4 -
+    7 6 5
+
+Step 1: Left
+  Heuristic cost (h): 0
+    1 2 3
+    8 - 4
+    7 6 5
+
+======================================================================
+TEST CASE 2: Medium Complexity Problem
+======================================================================
+
+Initial State:
+  1 2 3
+  - 8 4
+  7 6 5
+
+Goal State:
+  1 2 3
+  8 - 4
+  7 6 5
+
+[2] Solving with Hill Climbing (Manhattan Distance)...
+----------------------------------------------------------------------
+
+✓ SUCCESS! Hill Climbing found a solution.
+  - Number of moves: 1
+  - Nodes expanded: 1
+
+Solution Steps:
+
+Step 0: Initial
+  Heuristic cost (h): 1
+    1 2 3
+    - 8 4
+    7 6 5
+
+Step 1: Right
+  Heuristic cost (h): 0
+    1 2 3
+    8 - 4
+    7 6 5
+
+======================================================================
+TEST CASE 3: Complex Problem (Demonstrates Limitation)
+======================================================================
+
+Initial State:
+  1 2 3
+  8 6 4
+  7 - 5
+
+Goal State:
+  1 2 3
+  8 - 4
+  7 6 5
+
+[3] Solving with Hill Climbing (Manhattan Distance)...
+----------------------------------------------------------------------
+
+✓ SUCCESS! Hill Climbing found a solution.
+  - Number of moves: 1
+  - Nodes expanded: 1
+
+======================================================================
+COMPARISON: Hill Climbing vs A* Search
+======================================================================
+
+For TEST CASE 3, let's compare with A* Search:
+----------------------------------------------------------------------
+
+A* Search Results:
+  - Moves: 1
+  - Nodes Expanded: 1
+  - Status: ✓ Found optimal solution
+
+======================================================================
+ALGORITHM COMPARISON SUMMARY
+======================================================================
+
+┌──────────────────────────────┬────────────┬─────────────────┐
+│ Algorithm                    │ Test Case  │ Result          │
+├──────────────────────────────┼────────────┼─────────────────┤
+│ Hill Climbing (Manhattan)    │     1      │ ✓ Success (1 moves) │
+│ Hill Climbing (Manhattan)    │     2      │ ✓ Success (1 moves) │
+│ Hill Climbing (Manhattan)    │     3      │ ✓ Success (1 moves) │
+│ A* Search (Manhattan)        │     3      │ ✓ Success (1 moves) │
+└──────────────────────────────┴────────────┴─────────────────┘
+
+======================================================================
+KEY OBSERVATIONS
+======================================================================
+
+✓ Advantages of Hill Climbing:
+  • Very fast for simple problems (fewer nodes expanded)
+  • Low memory requirements
+  • Simple to implement and understand
+
+❌ Limitations of Hill Climbing:
+  • Can get stuck at local optima
+  • May fail to find a solution even when one exists
+  • Not guaranteed to find the optimal solution
+
+💡 Improvements:
+  • Hill Climbing with Sideways Moves: Helps escape plateaus
+  • Random Restart: Try multiple starting points
+  • Simulated Annealing: Allow occasional uphill moves
+
+✓ Advantages of A* Search:
+  • Guaranteed to find optimal solution (if exists)
+  • Complete: Always finds solution if one exists
+  • Uses admissible heuristics effectively
+
+======================================================================
+END OF 8-PUZZLE PROBLEM DEMONSTRATION
+======================================================================
+
