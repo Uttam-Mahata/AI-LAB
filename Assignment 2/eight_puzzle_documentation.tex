@@ -1,0 +1,329 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{The 8-Puzzle Problem: \\
+       Hill Climbing Algorithm}
+\author{AI Lab Assignment}
+\date{\today}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document provides a mathematical treatment of the 8-puzzle problem and its solution using the Hill Climbing algorithm. We present formal definitions, algorithm pseudocode, heuristic functions, complexity analysis, and experimental results.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+The 8-puzzle problem is a classic problem in artificial intelligence that involves sliding numbered tiles on a $3 \times 3$ grid to reach a goal configuration. This problem serves as an excellent testbed for studying search algorithms and heuristic functions.
+
+\subsection{Problem Statement}
+
+\begin{definition}[8-Puzzle State]
+An 8-puzzle state $S$ is a $3 \times 3$ matrix where each cell contains either a number from $\{1, 2, 3, 4, 5, 6, 7, 8\}$ or a blank space (denoted as 0):
+\[
+S = \begin{bmatrix}
+s_{11} & s_{12} & s_{13} \\
+s_{21} & s_{22} & s_{23} \\
+s_{31} & s_{32} & s_{33}
+\end{bmatrix}
+\]
+where $s_{ij} \in \{0, 1, 2, 3, 4, 5, 6, 7, 8\}$ and each number appears exactly once.
+\end{definition}
+
+\begin{definition}[Valid Move]
+A valid move $m$ slides a tile adjacent to the blank space into the blank space. The set of valid moves from state $S$ is:
+\[
+M(S) = \{m : m \in \{\text{Up, Down, Left, Right}\} \land \text{move } m \text{ is within bounds}\}
+\]
+\end{definition}
+
+\begin{definition}[State Space]
+The state space $\mathcal{S}$ is the set of all reachable states from an initial state $S_0$ through valid moves. The state space forms a directed graph $G = (\mathcal{S}, E)$ where:
+\begin{itemize}
+    \item $\mathcal{S}$ is the set of all possible board configurations
+    \item $E = \{(S_i, S_j) : S_j$ can be reached from $S_i$ by one valid move$\}$
+\end{itemize}
+\end{definition}
+
+\section{Heuristic Functions}
+
+Heuristic functions estimate the cost from a current state to the goal state.
+
+\subsection{Manhattan Distance Heuristic}
+
+\begin{definition}[Manhattan Distance]
+For a state $S$, the Manhattan distance heuristic $h_M(S)$ is the sum of the distances of each tile from its goal position:
+\[
+h_M(S) = \sum_{i=1}^{8} |x_i - x_i^*| + |y_i - y_i^*|
+\]
+where $(x_i, y_i)$ is the current position of tile $i$ and $(x_i^*, y_i^*)$ is its goal position.
+\end{definition}
+
+\subsection{Misplaced Tiles Heuristic}
+
+\begin{definition}[Misplaced Tiles]
+The misplaced tiles heuristic $h_T(S)$ counts the number of tiles not in their goal position:
+\[
+h_T(S) = |\{i : s_i \neq s_i^* \land s_i \neq 0\}|
+\]
+where $s_i$ is the value at position $i$ in state $S$ and $s_i^*$ is the goal value.
+\end{definition}
+
+\subsection{Dominance Relation}
+
+\begin{theorem}[Heuristic Dominance]
+For all non-goal states $S$ in the 8-puzzle:
+\[
+h_M(S) \geq h_T(S)
+\]
+Thus, Manhattan distance dominates the misplaced tiles heuristic.
+\end{theorem}
+
+\begin{proof}
+For any misplaced tile, its Manhattan distance from the goal is at least 1. Therefore:
+\[
+h_M(S) = \sum_{i \in \text{misplaced}} d_M(i) \geq \sum_{i \in \text{misplaced}} 1 = h_T(S)
+\]
+\end{proof}
+
+\section{Hill Climbing Algorithm}
+
+Hill Climbing is a local search algorithm that iteratively moves to neighboring states with better heuristic values.
+
+\subsection{Basic Hill Climbing}
+
+\begin{algorithm}
+\caption{Hill Climbing Search}
+\begin{algorithmic}[1]
+\Procedure{HillClimbing}{$S_0, S_{goal}, h$}
+    \State $current \gets S_0$
+    \State $visited \gets \{S_0\}$
+    \While{$current \neq S_{goal}$}
+        \State $neighbors \gets \text{GetSuccessors}(current) \setminus visited$
+        \If{$neighbors = \emptyset$}
+            \State \Return \textsc{Failure}
+        \EndIf
+        \State $best \gets \arg\min_{n \in neighbors} h(n)$
+        \If{$h(best) \geq h(current)$}
+            \State \Return \textsc{Failure}
+        \EndIf
+        \State $current \gets best$
+        \State $visited \gets visited \cup \{best\}$
+    \EndWhile
+    \State \Return $current$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Hill Climbing with Sideways Moves}
+
+\begin{algorithm}
+\caption{Hill Climbing with Sideways Moves}
+\begin{algorithmic}[1]
+\Procedure{HillClimbingSideways}{$S_0, S_{goal}, h, max_{sideways}$}
+    \State $current \gets S_0$
+    \State $visited \gets \{S_0\}$
+    \State $sideways\_count \gets 0$
+    \While{$current \neq S_{goal}$}
+        \State $neighbors \gets \text{GetSuccessors}(current) \setminus visited$
+        \If{$neighbors = \emptyset$}
+            \State \Return \textsc{Failure}
+        \EndIf
+        \State $best \gets \arg\min_{n \in neighbors} h(n)$
+        \If{$h(best) < h(current)$}
+            \State $current \gets best$
+            \State $sideways\_count \gets 0$
+        \ElsIf{$h(best) = h(current)$ \textbf{and} $sideways\_count < max_{sideways}$}
+            \State $current \gets best$
+            \State $sideways\_count \gets sideways\_count + 1$
+        \Else
+            \State \Return \textsc{Failure}
+        \EndIf
+        \State $visited \gets visited \cup \{best\}$
+    \EndWhile
+    \State \Return $current$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexity Analysis}
+
+\begin{theorem}[Time Complexity]
+Hill Climbing typically explores $O(d)$ nodes where $d$ is the number of steps taken, though it can explore $O(b^d)$ nodes in worst case where $b$ is the branching factor.
+\end{theorem}
+
+\begin{theorem}[Space Complexity]
+Hill Climbing has space complexity $O(d)$ where $d$ is the number of steps taken.
+\end{theorem}
+
+\subsection{Limitations}
+
+Hill Climbing suffers from three main problems:
+\begin{enumerate}
+    \item \textbf{Local Optima}: Getting stuck at states where all neighbors have worse heuristic values
+    \item \textbf{Plateaus}: Flat regions where neighbors have equal heuristic values
+    \item \textbf{Ridges}: Sequences of local maxima difficult to navigate
+\end{enumerate}
+
+\section{Experimental Results}
+
+\subsection{Test Cases}
+
+We evaluated Hill Climbing on several 8-puzzle instances:
+
+\subsubsection{Test Case 1: Simple Problem}
+
+\textbf{Initial State:}
+\[
+S_0 = \begin{bmatrix}
+1 & 2 & 3 \\
+8 & 4 & 0 \\
+7 & 6 & 5
+\end{bmatrix}
+\]
+
+\textbf{Goal State:}
+\[
+S_{goal} = \begin{bmatrix}
+1 & 2 & 3 \\
+8 & 0 & 4 \\
+7 & 6 & 5
+\end{bmatrix}
+\]
+
+\textbf{Results:}
+\begin{itemize}
+    \item Hill Climbing (Manhattan): 1 move, 1 node expanded
+\end{itemize}
+
+\subsubsection{Test Case 2: Medium Complexity}
+
+\textbf{Initial State:}
+\[
+S_0 = \begin{bmatrix}
+1 & 2 & 3 \\
+0 & 8 & 4 \\
+7 & 6 & 5
+\end{bmatrix}
+\]
+
+\textbf{Goal State:}
+\[
+S_{goal} = \begin{bmatrix}
+1 & 2 & 3 \\
+8 & 0 & 4 \\
+7 & 6 & 5
+\end{bmatrix}
+\]
+
+\textbf{Results:}
+\begin{itemize}
+    \item Hill Climbing (Manhattan): 1 move, 1 node expanded
+\end{itemize}
+
+\subsection{Performance Analysis}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Heuristic} & \textbf{Moves} & \textbf{Nodes Expanded} \\
+\hline
+Manhattan Distance & 1 & 1 \\
+Misplaced Tiles & Variable & Variable \\
+\hline
+\end{tabular}
+\caption{Hill Climbing performance on simple test cases}
+\end{table}
+
+\subsection{Algorithm Characteristics}
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Low memory requirements: $O(d)$
+    \item Fast execution for problems without local optima
+    \item Simple implementation
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Can get stuck at local optima
+    \item Not guaranteed to find a solution
+    \item Not guaranteed to find optimal solution
+\end{itemize}
+
+\textbf{Improvements:}
+\begin{itemize}
+    \item Sideways moves: Help escape plateaus
+    \item Random restart: Try multiple starting points
+    \item Simulated annealing: Allow occasional uphill moves
+\end{itemize}
+
+\section{Mathematical Properties}
+
+\subsection{State Space Size}
+
+\begin{theorem}[8-Puzzle State Space]
+The total number of possible configurations in the 8-puzzle is $9! = 362,880$. However, only half are reachable from any given initial state due to parity constraints.
+\end{theorem}
+
+\begin{proof}
+There are $9!$ ways to arrange 9 tiles (including the blank). The 8-puzzle can be proven to have two disjoint classes of states based on permutation parity, making only $9!/2 = 181,440$ states reachable from any given initial state.
+\end{proof}
+
+\subsection{Branching Factor}
+
+\begin{lemma}[Average Branching Factor]
+The average branching factor of the 8-puzzle is approximately 2.67.
+\end{lemma}
+
+\begin{proof}
+The blank can be in one of 9 positions:
+\begin{itemize}
+    \item Corner positions (4): 2 possible moves each
+    \item Edge positions (4): 3 possible moves each
+    \item Center position (1): 4 possible moves
+\end{itemize}
+Average: $\frac{4(2) + 4(3) + 1(4)}{9} = \frac{24}{9} \approx 2.67$
+\end{proof}
+
+\section{Conclusion}
+
+We have presented a mathematical treatment of the 8-puzzle problem using the Hill Climbing algorithm. Hill Climbing offers simplicity and efficiency for problems without local optima, though it can get stuck and fail to find solutions.
+
+The algorithm is best suited for:
+\begin{itemize}
+    \item Simple problems with clear gradient toward goal
+    \item Memory-constrained environments
+    \item Quick approximate solutions
+    \item Cases where optimal solution is not required
+\end{itemize}
+
+Variants like sideways moves and random restart can improve performance by helping escape local optima.
+
+\section{References}
+
+\begin{enumerate}
+    \item Russell, S., \& Norvig, P. (2020). \textit{Artificial Intelligence: A Modern Approach} (4th ed.). Pearson.
+    \item Pearl, J. (1984). \textit{Heuristics: Intelligent Search Strategies for Computer Problem Solving}. Addison-Wesley.
+\end{enumerate}
+
+\end{document}
