@@ -2,6 +2,7 @@ from typing import List, Tuple, Optional
 from copy import deepcopy
 
 
+
 class PuzzleState:
     BOARD_SIZE = 3
     
