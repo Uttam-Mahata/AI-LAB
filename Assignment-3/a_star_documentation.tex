@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=	iny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=	tfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+	itle{Documentation: A* Search Algorithm for Grid Pathfinding}
+\author{AI Lab - Assignment 3}
+\date{	oday}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+The A* search algorithm is a complete and optimal heuristic search algorithm used extensively in pathfinding and graph traversal. In this implementation (	exttt{grid\_solver\_v1.py}), the algorithm is applied to a 2D grid with obstacles and 8-directional movement.
+
+\section{Mathematical Formulation}
+A* evaluates nodes by combining the cost to reach the node and the estimated cost to reach the goal. The evaluation function is defined as:
+\begin{equation}
+    f(n) = g(n) + h(n)
+\end{equation}
+Where:
+\begin{itemize}
+    \item $g(n)$: The actual cost of the path from the start node to node $n$.
+    \item $h(n)$: The heuristic cost estimate from node $n$ to the goal.
+    \item $f(n)$: The estimated total cost of the path through node $n$.
+\end{itemize}
+
+\subsection{Heuristic Function}
+The implementation uses the 	extbf{Euclidean Distance} as the heuristic function, which is admissible for 8-directional grids if the diagonal movement cost is scaled correctly:
+\begin{equation}
+    h(n) = \sqrt{(x_n - x_{goal})^2 + (y_n - y_{goal})^2}
+\end{equation}
+
+\subsection{Movement Costs}
+In a grid with diagonal movement, the step cost $c(n, n')$ between adjacent nodes is:
+\begin{equation}
+    c(n, n') = 
+    \begin{cases} 
+    1.0 & 	ext{if move is horizontal or vertical} 
+    \sqrt{2} \approx 1.414 & 	ext{if move is diagonal}
+    \end{cases}
+\end{equation}
+
+\section{Algorithm Workflow}
+The algorithm maintains two sets:
+\begin{enumerate}
+    \item 	extbf{Open Set}: A priority queue containing nodes to be evaluated, sorted by $f(n)$.
+    \item 	extbf{G-Score Map}: Stores the lowest cost to reach each node found so far.
+\end{enumerate}
+
+At each step, the node with the minimum $f(n)$ is popped from the Open Set. For each valid neighbor, a tentative $g(n)$ is calculated. If this cost is lower than the previously recorded $g(n)$, the neighbor's scores are updated, and it is added to the Open Set.
+
+\section{Python Implementation Mapping}
+\begin{itemize}
+    \item 	exttt{heuristic(a, b)}: Implements the Euclidean distance calculation.
+    \item 	exttt{get\_neighbors(node)}: Logic for valid grid bounds and obstacle detection (	exttt{grid[r][c] == 0}).
+    \item 	exttt{solve()}: The main loop utilizing 	exttt{heapq} for the priority queue.
+\end{itemize}
+
+\end{document}

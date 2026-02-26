@@ -1,84 +1,72 @@
-# 8-Puzzle Problem Mathematical Documentation
+# Assignment 2 Technical Documentation
 
-This directory contains mathematical documentation for the 8-Puzzle Problem implementation using Hill Climbing algorithm.
+This document provides technical and mathematical details for the algorithms implemented in Assignment 2.
 
-## Files
+## 1. Water Jug Problem
 
-- **`eight_puzzle_documentation.tex`** - LaTeX source file (329 lines)
-- **`eight_puzzle_documentation.pdf`** - Compiled PDF document (7 pages, 188 KB)
+### 1.1 State Representation
+A state is represented as a tuple $(j_1, j_2)$ where:
+- $0 \leq j_1 \leq C_1$ (current water in Jug 1)
+- $0 \leq j_2 \leq C_2$ (current water in Jug 2)
+- $C_1, C_2$ are the maximum capacities.
 
-## Document Contents
+### 1.2 Transition Rules
+The state space is explored using the following operators:
+1. **Fill**: $(j_1, j_2) \to (C_1, j_2)$ or $(j_1, C_2)$
+2. **Empty**: $(j_1, j_2) \to (0, j_2)$ or $(j_1, 0)$
+3. **Pour**:
+   - $1 \to 2$: $(j_1, j_2) \to (j_1 - d, j_2 + d)$ where $d = \min(j_1, C_2 - j_2)$
+   - $2 \to 1$: $(j_1, j_2) \to (j_1 + d, j_2 - d)$ where $d = \min(j_2, C_1 - j_1)$
 
-### 1. Introduction
-- Formal definition of the 8-puzzle problem
-- Mathematical notation for states, moves, and state space
-- Problem formulation as a directed graph
+### 1.3 Search Strategies
+- **BFS (Breadth-First Search)**: Uses a FIFO queue to explore the shallowest unvisited nodes first. This guarantees finding the shortest sequence of operations.
+- **DFS (Depth-First Search)**: Uses a LIFO stack. In the Water Jug problem, cycles are handled using a `visited` set to prevent infinite loops.
 
-### 2. Heuristic Functions
-- **Manhattan Distance Heuristic**: $h_M(S) = \sum_{i=1}^{8} |x_i - x_i^*| + |y_i - y_i^*|$
-- **Misplaced Tiles Heuristic**: $h_T(S) = |\{i : s_i \neq s_i^* \land s_i \neq 0\}|$
-- Dominance relation proof: $h_M(S) \geq h_T(S)$
+---
 
-### 3. Hill Climbing Algorithm
-- Algorithm pseudocode in formal algorithmic notation
-- Basic Hill Climbing implementation
-- Hill Climbing with Sideways Moves variant
-- Time complexity: $O(b^d)$ worst case, $O(d)$ typical
-- Space complexity: $O(d)$
-- Discussion of limitations (local optima, plateaus, ridges)
+## 2. 8-Puzzle Problem
 
-### 4. Experimental Results
-- Test cases with matrix notation
-- Performance analysis
-- Algorithm characteristics
+### 2.1 State Space
+The 8-puzzle has $9! = 362,880$ possible configurations. However, only half ($181,440$) are reachable from any given state due to parity constraints on inversions.
 
-### 5. Mathematical Properties
-- State space size: 9! = 362,880 total configurations
-- Parity constraints: only 181,440 reachable states
-- Average branching factor: ~2.67
+### 2.2 Heuristic Functions
+Two heuristics are implemented to estimate the cost to reach the goal:
 
-### 6. References
-- Classic AI textbooks
+#### A. Misplaced Tiles ($h_1$)
+Counts the number of tiles that are not in their target position.
+$$h_1(s) = \sum_{i=1}^{8} [pos(tile_i) \neq goal\_pos(tile_i)]$$
 
-## Compiling the LaTeX Document
+#### B. Manhattan Distance ($h_2$)
+The sum of absolute differences of coordinates for each tile.
+$$h_2(s) = \sum_{i=1}^{8} (|x_i - x_{goal,i}| + |y_i - y_{goal,i}|)$$
+*Note: $h_2$ is more informed than $h_1$ because $h_2(n) \geq h_1(n)$ for all $n$.*
 
-To compile the LaTeX source file:
+### 2.3 Algorithms
 
-```bash
-pdflatex eight_puzzle_documentation.tex
-pdflatex eight_puzzle_documentation.tex  # Run twice for proper references
-```
+#### A* Search (Implemented in C)
+Minimizes $f(n) = g(n) + h(n)$:
+- $g(n)$: Actual cost from start to node $n$.
+- $h(n)$: Estimated cost from $n$ to goal.
+Since $h(n)$ is admissible (never overestimates), A* finds the optimal solution.
 
-### Required LaTeX Packages
-- `amsmath`, `amssymb`, `amsthm` - Mathematical typesetting
-- `algorithm`, `algpseudocode` - Algorithm formatting
-- `hyperref` - Hyperlinks in table of contents
-- `geometry` - Page layout
+#### Hill Climbing (Implemented in Python)
+A greedy local search that always moves to the successor with the lowest $h(n)$.
+- **Simple Hill Climbing**: Terminates if no neighbor has a lower $h(n)$. Prone to local optima and plateaus.
+- **Sideways Moves**: If the best neighbor has $h(neighbor) = h(current)$, the algorithm can take a limited number of "sideways" steps to navigate plateaus.
 
-## Features
+---
 
-✓ Professional mathematical notation  
-✓ Formal definitions, theorems, and proofs  
-✓ Algorithm pseudocode with proper formatting  
-✓ Matrix notation for state representation  
-✓ Complexity analysis with Big-O notation  
-✓ Clickable table of contents  
-✓ Numbered theorems and definitions  
+## 3. Implementation Details
 
-## Document Structure
+### Data Structures
+- **Python**: Uses `collections.deque` for BFS, lists as stacks for DFS, and `set` for visited states.
+- **C**: Implements custom Priority Queues (Min-Heaps) for A* and Linked Lists for state management.
 
-The document is organized into 6 main sections with subsections, spanning 7 pages. It includes:
-- Formal definitions for states, moves, and heuristics
-- Theorems with proofs for heuristic properties
-- 2 Hill Climbing algorithm pseudocodes
-- Mathematical equations and matrices
-- Test case results
-- References to authoritative sources
+### Performance Comparison
+Experimental results show that:
+1. **BFS** is optimal for the Water Jug problem but memory-intensive.
+2. **A* with Manhattan Distance** expands significantly fewer nodes than **A* with Misplaced Tiles** for the 8-puzzle.
+3. **Hill Climbing** is extremely fast but frequently fails on complex 8-puzzle configurations without advanced techniques like random restarts or sideways moves.
 
-## Usage
-
-This documentation serves as:
-1. A formal mathematical reference for Hill Climbing implementation
-2. Educational material for understanding the algorithm
-3. A basis for academic reports or presentations
-4. Reference material for algorithm analysis
+---
+*Refer to the LaTeX documentation `eight_puzzle_documentation.tex` for formal proofs and matrix notation.*
