@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{codepurple},
+    basicstyle=	tfamily\small,
+    breaklines=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    tabsize=2
+}
+
+	itle{Documentation: AO* Search Algorithm for AND-OR Graphs}
+\author{AI Lab - Assignment 3}
+\date{	oday}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+The AO* algorithm is used to find the optimal solution path in an AND-OR graph. Unlike standard state-space search (OR-graphs only), AND-OR graphs represent problems that can be solved by either one of several alternatives (OR) or by solving a set of sub-problems (AND).
+
+\section{Mathematical Concepts}
+In AO*, we don't use a $g(n)$ cost. Instead, we rely on updated heuristic values $h(n)$ that propagate upwards from leaf nodes to the root.
+
+\subsection{Cost Calculation}
+For a node $v$, let $S_1, S_2, \dots, S_k$ be the sets of successor nodes (branches). Each branch can be an AND branch (multiple nodes) or an OR branch (single node). The cost of a branch $S_i$ is calculated as:
+\begin{equation}
+    Cost(S_i) = \sum_{n \in S_i} [c(v, n) + h(n)]
+\end{equation}
+Where $c(v, n)$ is the cost of the edge (typically 1).
+
+The heuristic value $h(v)$ is updated using the 	extbf{min-cost} branch:
+\begin{equation}
+    h(v) = \min_{i} \{ Cost(S_i) \}
+\end{equation}
+
+\section{Algorithm Logic}
+The AO* algorithm in 	exttt{search\_graph.py} follows these steps:
+\begin{enumerate}
+    \item 	extbf{Initial Heuristic}: Start with initial heuristic estimates for all nodes.
+    \item 	extbf{Expansion}: Expand the current node and identify its AND/OR successors.
+    \item 	extbf{Bottom-up Update}: Once a leaf is reached or a node is expanded, recalculate the $h$ values of its parents based on the formula above.
+    \item 	extbf{Solution Graph}: Maintain a 	exttt{solution\_graph} dictionary that tracks which branches currently yield the minimum cost.
+\end{enumerate}
+
+\section{Implementation Details}
+\begin{itemize}
+    \item 	exttt{compute\_minimum\_cost\_child\_nodes(v)}: This function iterates through all possible hyper-edges (branches) from $v$ and returns the sum of $(1 + h(child))$ for the cheapest branch.
+    \item 	exttt{ao\_star(v, backtracking)}: Recursively processes nodes. When a node's heuristic is updated, it triggers updates in its ancestors (backtracking) to ensure global optimality.
+\end{itemize}
+
+\section{Graph Representation}
+The graph is represented as a dictionary where keys are nodes and values are lists of lists. Each inner list represents a branch:
+\begin{itemize}
+    \item 	exttt{A: [[B, E], [D]]} means node A has an AND-branch to \{B, E\} and an OR-branch to \{D\}.
+\end{itemize}
+
+\end{document}
