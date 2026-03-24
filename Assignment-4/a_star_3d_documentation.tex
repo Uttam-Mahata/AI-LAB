@@ -1,0 +1,568 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=1in}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    language=Python
+}
+
+\title{\textbf{Documentation: 3D Drone Rescue Navigation} \\
+       \large A* Search Algorithm for Smart City Rescue Mission \\
+       \large AI Lab — Assignment 4}
+\author{Uttam Mahata (2022CSB104)}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────────────────────
+
+A disaster has struck a futuristic smart city.
+An AI-powered drone must autonomously navigate through the city, avoiding
+collapsed buildings and fire zones, rescue all stranded survivors, and return
+to base — while minimising total energy consumption.
+
+This implementation uses the \textbf{A* search algorithm} extended to a
+three-dimensional grid.  The drone operates in a layered city space (Ground,
+Mid, and Sky levels) and must visit multiple intermediate goal states
+(survivor locations) before reaching the final goal (base station).
+
+Key challenges addressed:
+\begin{itemize}
+    \item 3D state-space navigation with heterogeneous movement costs.
+    \item Multi-goal search using greedy nearest-neighbour ordering.
+    \item Dynamic recharge logic when energy becomes insufficient mid-mission.
+    \item Admissible 3D Euclidean heuristic that guarantees optimal paths per segment.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Problem Formulation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{State Space}
+
+The smart city is modelled as a 3-dimensional grid.
+Each cell is identified by coordinates $(x, y, z)$ where:
+\begin{itemize}
+    \item $x \in \{0, \ldots, \text{rows}-1\}$ — row index (North–South axis).
+    \item $y \in \{0, \ldots, \text{cols}-1\}$ — column index (East–West axis).
+    \item $z \in \{0, \ldots, \text{levels}-1\}$ — altitude level (0 = Ground, 1 = Mid, 2 = Sky).
+\end{itemize}
+
+\subsection{Cell Types}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c l l @{}}
+\toprule
+\textbf{Symbol} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\texttt{0}  & Road / Open space     & Passable; base terrain cost = 1 \\
+\texttt{1}  & Building / Obstacle   & Impassable; drone cannot pass \\
+\texttt{F}  & Fire zone             & Passable; high-risk; terrain cost = 3 \\
+\texttt{S}  & Drone start           & Passable (cost = 1); mission origin \\
+\texttt{Gn} & Survivor location     & Passable (cost = 1); must be visited \\
+\texttt{R}  & Recharging station    & Passable (cost = 1); restores energy \\
+\texttt{B}  & Base station          & Passable (cost = 1); final goal \\
+\bottomrule
+\end{tabular}
+\caption{Cell types and their properties.}
+\end{table}
+
+\subsection{Initial and Goal States}
+
+\begin{itemize}
+    \item \textbf{Initial state:} the drone is at position $S$ with energy $E_0$.
+    \item \textbf{Intermediate goals:} all survivor locations $G_1, G_2, \ldots, G_n$
+          must be visited (in any order).
+    \item \textbf{Final goal:} the drone must return to base $B$ after rescuing
+          all survivors.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Movement Model}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Six-Directional Movement}
+
+The drone moves in six axis-aligned directions — no diagonal movement is
+permitted:
+
+\begin{center}
+\begin{tabular}{@{} l l @{}}
+\toprule
+\textbf{Direction} & \textbf{Coordinate change} \\
+\midrule
+North  & $(x-1,\; y,\; z)$ \\
+South  & $(x+1,\; y,\; z)$ \\
+East   & $(x,\; y+1,\; z)$ \\
+West   & $(x,\; y-1,\; z)$ \\
+Up     & $(x,\; y,\; z+1)$ \\
+Down   & $(x,\; y,\; z-1)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Energy Cost Model}
+
+The energy cost $c(u, v)$ to move from cell $u$ to adjacent cell $v$ depends
+on both the \emph{terrain} of the destination cell and the \emph{direction} of
+movement:
+
+\begin{equation}
+c(u, v) =
+\begin{cases}
+\tau(v)       & \text{if horizontal move } (\Delta z = 0) \\
+\tau(v) + 2   & \text{if ascending } (\Delta z = +1) \\
+1             & \text{if descending } (\Delta z = -1)
+\end{cases}
+\end{equation}
+
+where the terrain cost $\tau(v)$ is:
+
+\begin{equation}
+\tau(v) =
+\begin{cases}
+3 & \text{if } v \text{ is a fire zone (F)} \\
+1 & \text{otherwise (open space, S, B, R, or } G_n\text{)}
+\end{cases}
+\end{equation}
+
+\textbf{Rationale:}
+\begin{itemize}
+    \item Horizontal flight through free space costs 1 unit.
+    \item Fire zones create turbulence — horizontal traversal costs 3 units.
+    \item Ascending requires extra thrust against gravity: $+2$ energy units on
+          top of the terrain cost.
+    \item Descending exploits gravity assist and always costs just 1 unit,
+          regardless of terrain below.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{A* Algorithm}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Evaluation Function}
+
+A* evaluates each node $n$ using the combined function:
+\begin{equation}
+    f(n) = g(n) + h(n)
+\end{equation}
+
+\begin{itemize}
+    \item $g(n)$ — actual energy consumed from the start to node $n$.
+    \item $h(n)$ — admissible heuristic estimate of the energy from $n$ to the goal.
+    \item $f(n)$ — estimated total energy for the best path through $n$.
+\end{itemize}
+
+\subsection{Heuristic Function}
+
+The heuristic uses the \textbf{3D Euclidean distance}:
+
+\begin{equation}
+h(n) = \sqrt{(x_n - x_g)^2 + (y_n - y_g)^2 + (z_n - z_g)^2}
+\end{equation}
+
+\textbf{Admissibility:}
+Since the minimum possible energy for any single step is 1 unit (descending
+through free space), and the Euclidean distance never overestimates the
+number of steps required ($h_{\text{Euclidean}} \leq d_{\text{L1}}$), we have:
+\begin{equation}
+h(n) \leq h^*(n) \quad \forall n
+\end{equation}
+where $h^*(n)$ is the true minimum energy cost to the goal.
+This guarantees A* finds the \emph{optimal} (minimum energy) path per segment.
+
+\subsection{Priority Queue}
+
+Nodes are stored in a \textbf{min-heap} (priority queue) ordered by $f(n)$.
+A tie-breaking counter ensures that no two heap entries are compared on their
+position tuples:
+
+\begin{lstlisting}[caption={Priority queue push with tie-breaking.}]
+heapq.heappush(open_set, (f_score, g_score, next(counter), position))
+\end{lstlisting}
+
+Stale (outdated) entries are lazily discarded:
+
+\begin{lstlisting}[caption={Skipping outdated entries.}]
+if g_val > g_score.get(current, float('inf')):
+    continue   # outdated entry — skip
+\end{lstlisting}
+
+\subsection{Algorithm Pseudocode}
+
+\begin{lstlisting}[language={}, caption={A* on 3D City Grid (pseudocode)}, mathescape=true]
+Input:  city grid G, start s, goal t
+Output: shortest path P and cost c,  or None if unreachable
+
+  open  <- { (h(s,t), 0, s) }          -- min-heap: (f, g, node)
+  g[s]  <- 0 ;  g[v] <- inf  for all v != s
+  came_from <- {}
+
+  while open != empty:
+      (f, g_val, u) <- open.pop_min()
+      if g_val > g[u]:  continue        -- stale entry
+      if u = t:  return reconstruct(came_from, u), g[t]
+      for each neighbour v of u:
+          g' <- g[u] + c(u, v)
+          if g' < g[v]:
+              g[v]          <- g'
+              came_from[v]  <- u
+              open.push( g' + h(v,t), g', v )
+
+  return None, inf
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Multi-Goal Search Strategy}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Segment-by-Segment A*}
+
+The full mission is decomposed into independent A* searches:
+\[
+S \xrightarrow{A^*} G_{\pi(1)} \xrightarrow{A^*} G_{\pi(2)} \xrightarrow{A^*}
+\cdots \xrightarrow{A^*} G_{\pi(n)} \xrightarrow{A^*} B
+\]
+where $\pi$ is the visit permutation determined by the goal ordering heuristic.
+
+\subsection{Greedy Nearest-Neighbour Goal Ordering}
+
+Finding the optimal visit order for $n$ survivors is equivalent to the
+Travelling Salesman Problem (NP-hard).  For practical sizes, a
+\textbf{greedy nearest-neighbour} heuristic is applied:
+
+\begin{lstlisting}[language={}, caption={Greedy Nearest-Neighbour Goal Ordering (pseudocode)}]
+Input:  start s,  goal set G
+Output: ordered list of goals
+
+  ordered <- [] ;  current <- s ;  R <- G
+  while R != empty:
+      g* <- argmin_{g in R}  h(current, g)
+      ordered.append(g*)
+      current <- g*
+      R <- R \ {g*}
+  return ordered
+\end{lstlisting}
+
+The Euclidean distance $h$ is used for proximity estimation.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Recharge Logic}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Energy Tracking and Recharge Trigger}
+
+The drone tracks remaining energy $E$ throughout the mission.
+Before each segment, the A* cost $c_{\text{seg}}$ to the next goal is computed.
+If $c_{\text{seg}} > E$, the recharge procedure is triggered:
+
+\begin{enumerate}
+    \item Find the nearest reachable recharging station $R^*$ via A*.
+    \item If $\text{cost}(R^*) > E$: \textbf{Mission failure} — energy depleted
+          before reaching any station.
+    \item Fly to $R^*$, deducting travel cost from $E$.
+    \item \textbf{Recharge:} $E \gets E_0 - p$, where $E_0$ is the initial energy
+          and $p$ is the configurable recharge penalty.
+    \item Re-run A* from $R^*$ to the original target goal.
+\end{enumerate}
+
+\subsection{Recharge Penalty}
+
+Stopping at a recharge station incurs a fixed energy penalty $p$ (default: 5
+units) to model the time cost of landing, docking, and recharging.
+After recharging, the drone has energy $E_0 - p$ available (full recharge
+minus the penalty), ensuring the penalty discourages unnecessary detours.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Module Structure}
+
+\begin{lstlisting}[caption={Module-level layout of drone\_navigation.py}]
+drone_navigation.py
+├── Constants  (OBSTACLE, FIRE, DIRECTIONS, LEVEL_NAMES)
+├── CityGrid                    # loads and queries the 3D grid
+│   ├── __init__(data)          # parse JSON, locate S/B/Gn/R
+│   ├── get_cell(x, y, z)       # bounds-safe cell lookup
+│   ├── terrain_cost(cell)      # 3 for F, 1 otherwise
+│   ├── is_passable(cell)       # False for obstacle '1'
+│   ├── move_cost(dest, dz)     # direction-aware energy cost
+│   └── get_neighbors(pos)      # valid (neighbour, cost) pairs
+├── heuristic(a, b)             # 3D Euclidean distance
+├── astar_3d(grid, start, goal) # core A* — returns (path, cost)
+├── _reconstruct_path(...)      # backtrack came_from
+├── _greedy_goal_order(...)     # nearest-neighbour TSP heuristic
+├── _find_nearest_recharge(...) # A* to closest R station
+├── plan_mission(...)           # orchestrates full mission
+├── visualize_grid(...)         # ASCII layer-by-layer output
+└── main()                      # CLI entry point
+\end{lstlisting}
+
+\subsection{CityGrid Class}
+
+The \texttt{CityGrid} class wraps the JSON grid data and provides
+neighbour-lookup with full cost computation:
+
+\begin{lstlisting}[caption={CityGrid.get\_neighbors — cost-aware 3D neighbourhood.}]
+def get_neighbors(self, pos):
+    x, y, z = pos
+    result = []
+    for dx, dy, dz, _ in DIRECTIONS:
+        nx, ny, nz = x + dx, y + dy, z + dz
+        cell = self.get_cell(nx, ny, nz)
+        if self.is_passable(cell):
+            result.append(((nx, ny, nz), self.move_cost(cell, dz)))
+    return result
+\end{lstlisting}
+
+\subsection{A* Core}
+
+The \texttt{astar\_3d} function uses a min-heap with lazy deletion of stale entries:
+
+\begin{lstlisting}[caption={Core A* loop.}]
+while open_set:
+    f_val, g_val, _, current = heapq.heappop(open_set)
+
+    if current == goal:
+        return _reconstruct_path(came_from, current), g_score[goal]
+
+    if g_val > g_score.get(current, float('inf')):
+        continue   # stale entry
+
+    for neighbor, cost in city_grid.get_neighbors(current):
+        tentative = g_score[current] + cost
+        if tentative < g_score.get(neighbor, float('inf')):
+            came_from[neighbor] = current
+            g_score[neighbor]   = tentative
+            f_new = tentative + heuristic(neighbor, goal)
+            heapq.heappush(open_set,
+                           (f_new, tentative, next(_TIE_COUNTER), neighbor))
+\end{lstlisting}
+
+\subsection{Input Format}
+
+The city grid is provided as a \textbf{JSON file} with the following schema:
+
+\begin{lstlisting}[language={},caption={city\_grid.json structure.}]
+{
+  "dimensions": { "rows": 5, "cols": 5, "levels": 3 },
+  "initial_energy": 100,
+  "recharge_penalty": 5,
+  "grid": [
+    [ /* z=0 Ground Level */ [...], [...], ... ],
+    [ /* z=1 Mid Level    */ [...], [...], ... ],
+    [ /* z=2 Sky Level    */ [...], [...], ... ]
+  ]
+}
+\end{lstlisting}
+
+\subsection{Command-Line Interface}
+
+\begin{lstlisting}[language=bash,caption={Usage.}]
+python drone_navigation.py city_grid.json
+python drone_navigation.py city_grid.json --energy 80 --recharge-penalty 10
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{Argument}          & \textbf{Default}     & \textbf{Description} \\
+\midrule
+\texttt{grid\_file}         & —                    & Path to city grid JSON \\
+\texttt{--energy}           & from JSON (100)      & Initial drone energy \\
+\texttt{--recharge-penalty} & from JSON (5)        & Energy penalty for recharging \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Example: 5×5×3 City Grid}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Grid Layout}
+
+The example grid has 3 levels (z = 0, 1, 2) each of size 5×5.
+
+\textbf{Ground Level (z = 0):}
+\[
+\begin{array}{|c|c|c|c|c|}
+\hline
+S  & 0  & \mathbf{1} & 0  & 0 \\
+\hline
+0  & F  & \mathbf{1} & \mathbf{1} & G_1 \\
+\hline
+F  & 0  & 0  & 0  & F \\
+\hline
+R  & \mathbf{1} & \mathbf{1} & \mathbf{1} & 0 \\
+\hline
+B  & 0  & \mathbf{1} & 0  & G_2 \\
+\hline
+\end{array}
+\]
+
+\textbf{Mid Level (z = 1):}
+\[
+\begin{array}{|c|c|c|c|c|}
+\hline
+0  & 0  & \mathbf{1} & 0  & 0 \\
+\hline
+0  & \mathbf{1} & \mathbf{1} & 0  & 0 \\
+\hline
+F  & 0  & 0  & 0  & \mathbf{1} \\
+\hline
+0  & \mathbf{1} & \mathbf{1} & \mathbf{1} & 0 \\
+\hline
+0  & 0  & 0  & 0  & 0 \\
+\hline
+\end{array}
+\]
+
+\textbf{Sky Level (z = 2):}
+\[
+\begin{array}{|c|c|c|c|c|}
+\hline
+\mathbf{1} & 0  & 0  & 0  & 0 \\
+\hline
+0  & F  & 0  & \mathbf{1} & 0 \\
+\hline
+0  & 0  & \mathbf{1} & 0  & F \\
+\hline
+0  & 0  & 0  & 0  & 0 \\
+\hline
+0  & \mathbf{1} & 0  & 0  & \mathbf{1} \\
+\hline
+\end{array}
+\]
+
+\subsection{Special Positions}
+
+\begin{center}
+\begin{tabular}{@{} l l @{}}
+\toprule
+\textbf{Entity} & \textbf{Position $(x, y, z)$} \\
+\midrule
+Start $S$         & $(0, 0, 0)$ \\
+Survivor $G_1$    & $(1, 4, 0)$ \\
+Survivor $G_2$    & $(4, 4, 0)$ \\
+Recharge $R$      & $(3, 0, 0)$ \\
+Base $B$          & $(4, 0, 0)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Edge Cases}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{enumerate}
+    \item \textbf{No valid path to a survivor:}
+          A* returns \texttt{None} for that segment.
+          The mission halts with an error message.
+
+    \item \textbf{Energy depleted before reaching a recharge station:}
+          If $\text{cost}(R^*) > E$, the drone cannot reach any station.
+          The mission is declared failed.
+
+    \item \textbf{Base station unreachable:}
+          A* on the final segment returns \texttt{None}.
+          Error reported; partial path and consumed energy are still output.
+
+    \item \textbf{No survivor goals in grid:}
+          The drone flies directly from $S$ to $B$ in a single A* segment.
+
+    \item \textbf{No recharge stations in grid:}
+          If energy runs out mid-mission, mission fails with a clear error
+          rather than an infinite loop.
+
+    \item \textbf{Start equals goal:}
+          \texttt{astar\_3d} short-circuits and returns \texttt{([start], 0.0)}.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Complexity Analysis}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Let $N = \text{rows} \times \text{cols} \times \text{levels}$ be the total
+number of cells and $k$ be the number of survivors.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{Component}           & \textbf{Time}         & \textbf{Space} \\
+\midrule
+Single A* call               & $O(N \log N)$         & $O(N)$ \\
+Goal ordering (greedy)       & $O(k^2)$              & $O(k)$ \\
+Find nearest recharge        & $O(|\mathcal{R}| \cdot N \log N)$ & $O(N)$ \\
+Full mission ($k+1$ segments)& $O(k \cdot N \log N)$ & $O(N)$ \\
+\bottomrule
+\end{tabular}
+\caption{Asymptotic complexity ($\mathcal{R}$ = set of recharge stations).}
+\end{table}
+
+The space complexity per A* call is $O(N)$ for the \texttt{g\_score} dict and
+the \texttt{came\_from} backtracking map.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────────────────────
+
+This implementation extends the classical A* algorithm to a fully 3D,
+heterogeneous-cost, multi-goal rescue scenario.
+Key design decisions:
+
+\begin{itemize}
+    \item \textbf{Admissible 3D heuristic} — 3D Euclidean distance guarantees
+          optimality for each individual segment.
+    \item \textbf{Direction-aware costs} — ascending and descending have
+          physically motivated asymmetric energy penalties.
+    \item \textbf{Greedy goal ordering} — practical $O(k^2)$ nearest-neighbour
+          heuristic avoids NP-hard TSP exact search.
+    \item \textbf{Lazy recharge} — recharging is only triggered when necessary,
+          minimising the fixed penalty cost.
+    \item \textbf{Configurable parameters} — initial energy and recharge penalty
+          can be specified via JSON or CLI flags, enabling scenario testing.
+\end{itemize}
+
+\end{document}
